@@ -73,8 +73,6 @@ public class Main {
                     handleEcho(commandArray.get(4), writer);
                 }
                 break;
-            default:
-                break;
         }
   }
 
