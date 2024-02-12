@@ -2,6 +2,7 @@ import java.io.*;
 import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
@@ -31,8 +32,16 @@ public class Main {
           BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
           PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
           String line;
+          ArrayList<String> commandArray = new ArrayList<>();
+          int commandLength=0;
           while ((line = reader.readLine()) != null) {
-              handleCommand(line, writer);
+              commandArray.add(line);
+              if(commandArray.size()==1){
+                  commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
+              }
+              else if(commandArray.size()==commandLength){
+                handleCommand(commandArray, writer);
+              }
           }
       } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
@@ -47,26 +56,21 @@ public class Main {
       }
   }
 
-  public static void handleCommand(String command, PrintWriter writer){
-        String[] commandArray = splitCommand(command);
-        System.out.println(Arrays.toString(commandArray));
-        if (commandArray.length==1 && commandArray[0].equalsIgnoreCase("ping")){
-            handlePing(writer);
-            return;
-        }
-        int commandLength = Integer.parseInt(commandArray[0].substring(1));
+  public static void handleCommand(ArrayList<String> commandArray, PrintWriter writer){
+//        String[] commandArray = splitCommand(command);
+        int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
         assert commandLength==1 || commandLength==2;
         switch (commandLength){
             case 1:
-                if(commandArray[0].equalsIgnoreCase("PING")){
+                if(commandArray.get(2).equalsIgnoreCase("PING")){
 //                    System.out.println(Arrays.toString(commandArray));
                     handlePing(writer);
                 }
                 break;
             case 2:
-                if(commandArray[2].equalsIgnoreCase("ECHO")){
+                if(commandArray.get(2).equalsIgnoreCase("ECHO")){
 //                    System.out.println(Arrays.toString(commandArray));
-                    handleEcho(commandArray[4], writer);
+                    handleEcho(commandArray.get(4), writer);
                 }
                 break;
         }
@@ -84,7 +88,7 @@ public class Main {
 
   public static String[] splitCommand(String command) {
       String[] commandArray = command.split("\\r\\n");
-      System.out.println(Arrays.toString(commandArray));
+//      System.out.println(Arrays.toString(commandArray));
     return commandArray;
   }
 
