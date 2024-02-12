@@ -1,6 +1,8 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 
 public class Main {
   public static void main(String[] args){
@@ -52,10 +54,12 @@ public class Main {
         switch (commandLength){
             case 1:
                 if(commandArray[0].equalsIgnoreCase("PING")){
+                    System.out.println(Arrays.toString(commandArray));
                     handlePing(writer);
                 }
             case 2:
                 if(commandArray[2].equalsIgnoreCase("ECHO")){
+                    System.out.println(Arrays.toString(commandArray));
                     handleEcho(commandArray[4], writer);
                 }
         }
