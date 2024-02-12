@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RedisServer {
     ServerSocket serverSocket = null;
     int port = 6379;
+    String role = "master";
     ConcurrentHashMap<String, String> map;
     ConcurrentHashMap<String,Long> ExpiryMap;
 
@@ -21,6 +22,10 @@ public class RedisServer {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public void startServer() {
@@ -95,6 +100,15 @@ public class RedisServer {
             case "get":
                 handleGet(commandArray.get(4), writer);
                 break;
+            case "info":
+                if(commandArray.get(4).equalsIgnoreCase("replication")){
+                    handleInfo(writer);
+                }
+                else{
+                    writer.print("-ERR unknown subcommand or wrong number of arguments for 'info'\r\n");
+                    writer.flush();
+                }
+                break;
             default:
                 writer.print("-ERR unknown command '"+command+"'\r\n");
                 writer.flush();
@@ -149,7 +163,14 @@ public class RedisServer {
         writer.flush();
     }
 
+    public void handleInfo(PrintWriter writer){
+        writer.print(bulkString("role:"+role));
+        writer.flush();
+    }
 
+    public static String bulkString(String message){
+        return "$"+message.length()+"\r\n"+message+"\r\n";
+    }
 
     public static String[] splitCommand(String command) {
         String[] commandArray = command.split("\\r\\n");
