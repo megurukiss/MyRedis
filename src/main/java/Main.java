@@ -15,13 +15,15 @@ public class Main {
           serverSocket = new ServerSocket(port);
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
-          clientSocket = serverSocket.accept();
-          BufferedReader reader=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-          PrintWriter writer=new PrintWriter(clientSocket.getOutputStream(), true);
-          String line;
-          while((line=reader.readLine())!=null){
-            responsePong(writer);
-          }
+            while(true){
+                clientSocket = serverSocket.accept();
+                BufferedReader reader=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter writer=new PrintWriter(clientSocket.getOutputStream(), true);
+                String line;
+                while((line=reader.readLine())!=null){
+                    responsePong(writer);
+                }
+            }
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
         } finally {
