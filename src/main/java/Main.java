@@ -41,8 +41,8 @@ public class Main {
               }
               else if(commandArray.size()==commandLength){
                 handleCommand(commandArray, writer);
+                commandArray.clear();
               }
-              commandArray.clear();
           }
       } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
