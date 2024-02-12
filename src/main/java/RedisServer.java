@@ -12,8 +12,10 @@ public class RedisServer {
     ServerSocket serverSocket = null;
     int port = 6379;
     ConcurrentHashMap<String, String> map;
+    ConcurrentHashMap<String,Long> ExpiryMap;
     public RedisServer() {
         map= new ConcurrentHashMap<>();
+        ExpiryMap = new ConcurrentHashMap<>();
     }
 
     public void startServer() {
@@ -64,7 +66,7 @@ public class RedisServer {
 
     public void handleCommand(ArrayList<String> commandArray, PrintWriter writer){
 //        String[] commandArray = splitCommand(command);
-//        int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
+        int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
         String command = commandArray.get(2);
         switch (command.toLowerCase()){
             case "ping":
@@ -74,12 +76,20 @@ public class RedisServer {
                 handleEcho(commandArray.get(4), writer);
                 break;
             case "set":
-                handleSet(commandArray.get(4), commandArray.get(6),writer);
+                if(commandLength==3) {
+                    handleSet(commandArray.get(4), commandArray.get(6), writer);
+                }else if(commandLength==5){
+                    if(commandArray.get(8).equalsIgnoreCase("px")){
+                        handleSetWithExpiry(commandArray.get(4), commandArray.get(6), commandArray.get(10), writer);
+                    }
+                }
                 break;
             case "get":
                 handleGet(commandArray.get(4), writer);
                 break;
             default:
+                writer.print("-ERR unknown command '"+command+"'\r\n");
+                writer.flush();
                 break;
         }
     }
@@ -100,10 +110,31 @@ public class RedisServer {
         writer.flush();
     }
 
+    public void handleSetWithExpiry(String key, String value, String expiry, PrintWriter writer){
+        long time = System.currentTimeMillis();
+        long expiryTime = Long.parseLong(expiry);
+        map.put(key, value);
+        ExpiryMap.put(key, time+expiryTime);
+        writer.print("+OK\r\n");
+        writer.flush();
+    }
+
     public void handleGet(String key, PrintWriter writer){
         String value = map.get(key);
+        Long expiryTime = ExpiryMap.get(key);
         if(value!=null){
-            writer.print("$"+value.length()+"\r\n"+value+"\r\n");
+            if(expiryTime!=null){
+                if(System.currentTimeMillis()>expiryTime){
+                    map.remove(key);
+                    ExpiryMap.remove(key);
+                    writer.print("$-1\r\n");
+                    writer.flush();
+                    return;
+                }
+            }
+            else {
+                writer.print("$" + value.length() + "\r\n" + value + "\r\n");
+            }
         }
         else{
             writer.print("$-1\r\n");
