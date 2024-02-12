@@ -54,14 +54,16 @@ public class Main {
         switch (commandLength){
             case 1:
                 if(commandArray[0].equalsIgnoreCase("PING")){
-                    System.out.println(Arrays.toString(commandArray));
+//                    System.out.println(Arrays.toString(commandArray));
                     handlePing(writer);
                 }
+                break;
             case 2:
                 if(commandArray[2].equalsIgnoreCase("ECHO")){
-                    System.out.println(Arrays.toString(commandArray));
+//                    System.out.println(Arrays.toString(commandArray));
                     handleEcho(commandArray[4], writer);
                 }
+                break;
         }
   }
 
