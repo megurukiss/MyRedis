@@ -51,7 +51,7 @@ public class Main {
         assert commandLength==1 || commandLength==2;
         switch (commandLength){
             case 1:
-                if(commandArray[2].equalsIgnoreCase("PING")){
+                if(commandArray[0].equalsIgnoreCase("PING")){
                     handlePing(writer);
                 }
             case 2:
