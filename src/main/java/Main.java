@@ -30,10 +30,7 @@ public class Main {
           PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
           String line;
           while ((line = reader.readLine()) != null) {
-              if (line.equalsIgnoreCase("PING")) {
-                  writer.print("+PONG\r\n");
-                  writer.flush();
-              }
+              handleCommand(line, writer);
           }
       } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
@@ -46,6 +43,36 @@ public class Main {
               System.out.println("IOException: " + e.getMessage());
           }
       }
+  }
+
+  public static void handleCommand(String command, PrintWriter writer){
+        String[] commandArray = splitCommand(command);
+        int commandLength = Integer.parseInt(commandArray[0].substring(1));
+        assert commandLength==1 || commandLength==2;
+        switch (commandLength){
+            case 1:
+                if(commandArray[2].equalsIgnoreCase("PING")){
+                    handlePing(writer);
+                }
+            case 2:
+                if(commandArray[2].equalsIgnoreCase("ECHO")){
+                    handleEcho(commandArray[4], writer);
+                }
+        }
+  }
+
+    public static void handlePing(PrintWriter writer){
+        writer.print("+PONG\r\n");
+        writer.flush();
+    }
+
+    public static void handleEcho(String message, PrintWriter writer){
+        writer.print("$"+message.length()+"\r\n"+message+"\r\n");
+        writer.flush();
+    }
+
+  public static String[] splitCommand(String command) {
+    return command.split("\\r\\n");
   }
 
 }
