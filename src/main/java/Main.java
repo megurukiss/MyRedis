@@ -49,7 +49,7 @@ public class Main {
 
   public static void handleCommand(String command, PrintWriter writer){
         String[] commandArray = splitCommand(command);
-        if (commandArray.length==1 && commandArray[0].equalsIgnoreCase("ping"){
+        if (commandArray.length==1 && commandArray[0].equalsIgnoreCase("ping")){
             handlePing(writer);
             return;
         }
