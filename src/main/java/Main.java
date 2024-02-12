@@ -17,9 +17,10 @@ public class Main {
           // Wait for connection from client.
           clientSocket = serverSocket.accept();
           BufferedReader reader=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+          PrintWriter writer=new PrintWriter(clientSocket.getOutputStream(), true);
           String line;
           while((line=reader.readLine())!=null){
-            responsePong(clientSocket);
+            responsePong(writer);
           }
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
@@ -34,11 +35,11 @@ public class Main {
         }
   }
 
-  public static void responsePong(Socket clientSocket) {
+  public static void responsePong(PrintWriter writer) {
     try{
-        PrintWriter writer=new PrintWriter(clientSocket.getOutputStream(), true);
         writer.print("+PONG\r\n");
-    }catch (IOException e){
+        writer.flush();
+    }catch (Exception e){
       throw new RuntimeException("Error writing to client", e);
     }
   }
