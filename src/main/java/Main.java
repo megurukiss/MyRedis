@@ -35,7 +35,7 @@ public class Main {
   public static void responsePong(Socket clientSocket) {
     try{
         PrintWriter writer=new PrintWriter(clientSocket.getOutputStream(), true);
-        writer.println("+PONG\r\n");
+        writer.print("+PONG\r\n");
     }catch (IOException e){
       throw new RuntimeException("Error writing to client", e);
     }
