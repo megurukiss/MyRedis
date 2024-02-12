@@ -13,9 +13,14 @@ public class RedisServer {
     int port = 6379;
     ConcurrentHashMap<String, String> map;
     ConcurrentHashMap<String,Long> ExpiryMap;
+
     public RedisServer() {
         map= new ConcurrentHashMap<>();
         ExpiryMap = new ConcurrentHashMap<>();
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     public void startServer() {
@@ -82,6 +87,9 @@ public class RedisServer {
                     if(commandArray.get(8).equalsIgnoreCase("px")){
                         handleSetWithExpiry(commandArray.get(4), commandArray.get(6), commandArray.get(10), writer);
                     }
+                }else{
+                    writer.print("-ERR syntax error\r\n");
+                    writer.flush();
                 }
                 break;
             case "get":
