@@ -14,14 +14,14 @@ public class Main {
         try {
           serverSocket = new ServerSocket(port);
           serverSocket.setReuseAddress(true);
-          // Wait for connection from client.
             while(true){
                 clientSocket = serverSocket.accept();
                 BufferedReader reader=new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 PrintWriter writer=new PrintWriter(clientSocket.getOutputStream(), true);
                 String line;
                 while((line=reader.readLine())!=null){
-                    responsePong(writer);
+                    writer.print("+PONG\r\n");
+                    writer.flush();
                 }
             }
         } catch (IOException e) {
@@ -35,14 +35,5 @@ public class Main {
             System.out.println("IOException: " + e.getMessage());
           }
         }
-  }
-
-  public static void responsePong(PrintWriter writer) {
-    try{
-        writer.print("+PONG\r\n");
-        writer.flush();
-    }catch (Exception e){
-      throw new RuntimeException("Error writing to client", e);
-    }
   }
 }
