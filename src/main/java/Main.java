@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -16,6 +18,7 @@ public class Main {
           serverSocket.setReuseAddress(true);
           // Wait for connection from client.
           clientSocket = serverSocket.accept();
+          responsePong(clientSocket);
         } catch (IOException e) {
           System.out.println("IOException: " + e.getMessage());
         } finally {
@@ -27,5 +30,14 @@ public class Main {
             System.out.println("IOException: " + e.getMessage());
           }
         }
+  }
+
+  public static void responsePong(Socket clientSocket) {
+    try{
+        PrintWriter writer=new PrintWriter(clientSocket.getOutputStream(), true);
+        writer.println("+PONG\r\n");
+    }catch (IOException e){
+      throw new RuntimeException("Error writing to client", e);
+    }
   }
 }
