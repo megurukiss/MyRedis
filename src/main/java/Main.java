@@ -49,6 +49,7 @@ public class Main {
 
   public static void handleCommand(String command, PrintWriter writer){
         String[] commandArray = splitCommand(command);
+        System.out.println(Arrays.toString(commandArray));
         if (commandArray.length==1 && commandArray[0].equalsIgnoreCase("ping")){
             handlePing(writer);
             return;
@@ -82,7 +83,9 @@ public class Main {
     }
 
   public static String[] splitCommand(String command) {
-    return command.split("\\r\\n");
+      String[] commandArray = command.split("\\r\\n");
+      System.out.println(Arrays.toString(commandArray));
+    return commandArray;
   }
 
 }
