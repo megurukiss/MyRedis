@@ -49,6 +49,10 @@ public class Main {
 
   public static void handleCommand(String command, PrintWriter writer){
         String[] commandArray = splitCommand(command);
+        if (commandArray.length==1 && commandArray[0].equalsIgnoreCase("ping"){
+            handlePing(writer);
+            return;
+        }
         int commandLength = Integer.parseInt(commandArray[0].substring(1));
         assert commandLength==1 || commandLength==2;
         switch (commandLength){
