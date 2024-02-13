@@ -53,7 +53,6 @@ public class SlaveServer extends RedisServer{
                             commandArray.add(line);
                         }
                         if(commandArray.size()==commandLength && commandLength!=0){
-
                             handleCommand(commandArray, masterSocket);
                             commandArray.clear();
                             commandLength=0;
