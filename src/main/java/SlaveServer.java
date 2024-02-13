@@ -48,7 +48,7 @@ public class SlaveServer extends RedisServer{
                     }else if(line.startsWith("*")){
                         commandArray.add(line);
                         commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
-                    }else{
+                    }else if(!line.isEmpty()){
                         if(commandArray.size()<commandLength){
                             commandArray.add(line);
                         }
