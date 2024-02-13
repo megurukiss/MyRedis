@@ -177,4 +177,12 @@ public class RedisServer {
 //      System.out.println(Arrays.toString(commandArray));
         return commandArray;
     }
+    public static String toRESP(String[] commandArray){
+        StringBuilder response = new StringBuilder();
+        response.append("*"+commandArray.length+"\r\n");
+        for(String s:commandArray){
+            response.append("$"+s.length()+"\r\n"+s+"\r\n");
+        }
+        return response.toString();
+    }
 }

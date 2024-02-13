@@ -22,8 +22,12 @@ public class SlaveServer extends RedisServer{
         try{
             Socket masterSocket = new Socket(MasterIp, MasterPort);
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(masterSocket.getOutputStream()));
-            String pingCommand= "*1\r\n$4\r\nPING\r\n";
+            String pingCommand= toRESP(new String[]{"PING"});
+            String replconfigCommand1= toRESP(new String[]{"REPLCONF","listening-port",String.valueOf(MasterPort)});
+            String replconfigCommand2= toRESP(new String[]{"REPLCONF","capa","psync2"});
             writer.print(pingCommand);
+            writer.print(replconfigCommand1);
+            writer.print(replconfigCommand2);
             writer.flush();
         }catch (IOException e){
             e.printStackTrace();
