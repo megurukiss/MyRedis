@@ -82,7 +82,7 @@ public class MasterServer extends RedisServer{
                 break;
             case "get":
                 handleGet(commandArray.get(4), writer);
-                propogateToReplicas(commandArray);
+//                propogateToReplicas(commandArray);
                 break;
             case "info":
                 if(commandArray.get(4).equalsIgnoreCase("replication")){
