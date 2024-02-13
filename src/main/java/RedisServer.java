@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -47,7 +44,7 @@ public class RedisServer {
     public void handleClient(Socket clientSocket) {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+//            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
             String line;
             ArrayList<String> commandArray = new ArrayList<>();
             int commandLength=0;
@@ -57,7 +54,7 @@ public class RedisServer {
                     commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
                 }
                 else if(commandArray.size()==commandLength){
-                    handleCommand(commandArray, writer);
+                    handleCommand(commandArray, clientSocket);
                     commandArray.clear();
                 }
             }
@@ -74,9 +71,11 @@ public class RedisServer {
         }
     }
 
-    public void handleCommand(ArrayList<String> commandArray, PrintWriter writer){
+    public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
 //        String[] commandArray = splitCommand(command);
         int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
+        OutputStream os = clientSocket.getOutputStream();
+        PrintWriter writer = new PrintWriter(os, true);
         String command = commandArray.get(2);
         switch (command.toLowerCase()){
             case "ping":

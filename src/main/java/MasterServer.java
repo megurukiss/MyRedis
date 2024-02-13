@@ -1,5 +1,8 @@
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 
 public class MasterServer extends RedisServer{
     String role = "master";
@@ -10,8 +13,40 @@ public class MasterServer extends RedisServer{
     }
 
     @Override
-    public void handleCommand(ArrayList<String> commandArray, PrintWriter writer){
+    public void handleClient(Socket clientSocket) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+//            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+            String line;
+            ArrayList<String> commandArray = new ArrayList<>();
+            int commandLength=0;
+            while ((line = reader.readLine()) != null) {
+                commandArray.add(line);
+                if(commandArray.size()==1){
+                    commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
+                }
+                else if(commandArray.size()==commandLength){
+                    handleCommand(commandArray, clientSocket);
+                    commandArray.clear();
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("IOException: " + e.getMessage());
+        }finally {
+            try {
+                if (clientSocket != null) {
+                    clientSocket.close();
+                }
+            } catch (IOException e) {
+                System.out.println("IOException: " + e.getMessage());
+            }
+        }
+    }
+
+    public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
         int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
+        OutputStream os = clientSocket.getOutputStream();
+        PrintWriter writer = new PrintWriter(os, true);
         String command = commandArray.get(2);
         switch (command.toLowerCase()){
             case "ping":
@@ -22,6 +57,7 @@ public class MasterServer extends RedisServer{
                 break;
             case "replconf":
                 handleReplconf(writer);
+                sendRDBFile(os);
                 break;
             case "psync":
                 handlePsync(writer);
@@ -64,6 +100,20 @@ public class MasterServer extends RedisServer{
     private void handlePsync(PrintWriter writer){
         writer.print(String.format("+FULLRESYNC %s %s\r\n", MASTER_REPLID, MASTER_REPL_OFFSET));
         writer.flush();
+    }
+    private void sendRDBFile(OutputStream os){
+        BufferedOutputStream bos = new BufferedOutputStream(os);
+        byte[] rdb= Base64.getDecoder().decode("UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJp" +
+                "dHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==");
+        String prefix= "$" + rdb.length + "\r\n";
+        byte[] prefixBytes=prefix.getBytes();
+        try {
+            bos.write(prefixBytes);
+            bos.write(rdb);
+            bos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     @Override
     public void handleInfo(PrintWriter writer){
