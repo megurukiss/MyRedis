@@ -43,12 +43,15 @@ public class SlaveServer extends RedisServer{
                 ArrayList<String> commandArray = new ArrayList<>();
                 int commandLength = 0;
                 while((line = reader.readLine())!=null){
+                    if(line.isEmpty()){
+                        continue;
+                    }
                     if(line.startsWith("+")){
                         continue;
                     }else if(line.startsWith("*")){
                         commandArray.add(line);
                         commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
-                    }else if(!line.isEmpty()){
+                    }else {
                         if(commandArray.size()<commandLength){
                             commandArray.add(line);
                         }
