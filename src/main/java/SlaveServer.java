@@ -89,7 +89,7 @@ public class SlaveServer extends RedisServer{
     public void handleGet(String key, Socket clientSocket) throws IOException{
         String value = map.get(key);
         Long expiryTime = ExpiryMap.get(key);
-        System.out.println(expiryTime);
+//        System.out.println(expiryTime);
         int remotePort = clientSocket.getPort();
         String remoteIp = clientSocket.getInetAddress().getHostAddress();
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
@@ -99,9 +99,7 @@ public class SlaveServer extends RedisServer{
                 ExpiryMap.remove(key);
                 if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
                     writer.print("$-1\r\n");
-                    writer.flush();
                 }
-                return;
             }
             else {
                 if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)) {

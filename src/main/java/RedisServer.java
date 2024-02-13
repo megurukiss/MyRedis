@@ -143,7 +143,7 @@ public class RedisServer {
     public void handleGet(String key, PrintWriter writer){
         String value = map.get(key);
         Long expiryTime = ExpiryMap.get(key);
-        System.out.println(expiryTime);
+//        System.out.println(expiryTime);
         if(value!=null){
             if(expiryTime!=null && System.currentTimeMillis()>expiryTime) {
                 map.remove(key);
