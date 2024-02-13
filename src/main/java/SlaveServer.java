@@ -45,7 +45,7 @@ public class SlaveServer extends RedisServer{
                 }
                 break;
             case "get":
-                handleGet(commandArray.get(4), writer);
+                handleGet(commandArray.get(4), clientSocket);
                 break;
             case "info":
                 if(commandArray.get(4).equalsIgnoreCase("replication")){
@@ -82,6 +82,16 @@ public class SlaveServer extends RedisServer{
         int remotePort = clientSocket.getPort();
         String remoteIp = clientSocket.getInetAddress().getHostAddress();
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
+            writer.print("+OK\r\n");
+            writer.flush();
+        }
+    }
+    public void handleGet(String key, Socket clientSocket) throws IOException{
+        String value = map.get(key);
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        int remotePort = clientSocket.getPort();
+        String remoteIp = clientSocket.getInetAddress().getHostAddress();
         if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
             writer.print("+OK\r\n");
             writer.flush();
