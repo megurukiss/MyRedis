@@ -14,6 +14,7 @@ public class RedisStarter {
                 String[] replicaof = cmd.getOptionValues("replicaof");
                 ((SlaveServer) server).setMasterIp(replicaof[0]);
                 ((SlaveServer) server).setMasterPort(Integer.parseInt(replicaof[1]));
+                ((SlaveServer) server).connectToMaster();
             }else{
                 server=new MasterServer();
                 server.setRole("master");
