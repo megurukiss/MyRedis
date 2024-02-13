@@ -12,8 +12,6 @@ public class RedisServer {
     ServerSocket serverSocket = null;
     int port = 6379;
     String role = "master";
-    String MasterIp;
-    int MasterPort;
     ConcurrentHashMap<String, String> map;
     ConcurrentHashMap<String,Long> ExpiryMap;
 
@@ -30,12 +28,6 @@ public class RedisServer {
         this.role = role;
     }
 
-    public void setMasterIp(String MasterIp) {
-        this.MasterIp = MasterIp;
-    }
-    public void setMasterPort(int MasterPort) {
-        this.MasterPort = MasterPort;
-    }
 
     public void startServer() {
         try {
