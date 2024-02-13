@@ -15,7 +15,8 @@ public class RedisStarter {
                 ((SlaveServer) server).setMasterIp(replicaof[0]);
                 ((SlaveServer) server).setMasterPort(Integer.parseInt(replicaof[1]));
             }else{
-                server=new RedisServer();
+                server=new MasterServer();
+                server.setRole("master");
             }
             if(cmd.hasOption("port")){
                 server.setPort(Integer.parseInt(cmd.getOptionValue("port")));
