@@ -110,7 +110,7 @@ public class MasterServer extends RedisServer{
     }
     private void sendRDBFile(OutputStream os){
         BufferedOutputStream bos = new BufferedOutputStream(os);
-        byte[] rdb= Base64.getDecoder().decode("DQo=");
+        byte[] rdb= Base64.getDecoder().decode("UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==");
         String prefix= "$" + rdb.length + "\r\n";
         byte[] prefixBytes=prefix.getBytes();
         try {
