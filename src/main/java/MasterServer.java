@@ -23,6 +23,9 @@ public class MasterServer extends RedisServer{
             case "replconf":
                 handleReplconf(writer);
                 break;
+            case "psync":
+                handlePsync(writer);
+                break;
             case "set":
                 if(commandLength==3) {
                     handleSet(commandArray.get(4), commandArray.get(6), writer);
@@ -54,8 +57,12 @@ public class MasterServer extends RedisServer{
         }
     }
 
-    public void handleReplconf(PrintWriter writer){
+    private void handleReplconf(PrintWriter writer){
         writer.print("+OK\r\n");
+        writer.flush();
+    }
+    private void handlePsync(PrintWriter writer){
+        writer.print(String.format("+FULLRESYNC %s %s\r\n", MASTER_REPLID, MASTER_REPL_OFFSET));
         writer.flush();
     }
     @Override
