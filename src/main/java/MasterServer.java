@@ -3,13 +3,16 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
 
 public class MasterServer extends RedisServer{
     String role = "master";
     private static final String MASTER_REPLID = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
     private static final String MASTER_REPL_OFFSET = "0";
+    private final HashSet<Socket> replicaSockets;
     public MasterServer(){
         super();
+        replicaSockets = new HashSet<>();
     }
 
     @Override
@@ -34,7 +37,7 @@ public class MasterServer extends RedisServer{
             System.out.println("IOException: " + e.getMessage());
         }finally {
             try {
-                if (clientSocket != null) {
+                if (clientSocket != null && !replicaSockets.contains(clientSocket)) {
                     clientSocket.close();
                 }
             } catch (IOException e) {
@@ -61,6 +64,7 @@ public class MasterServer extends RedisServer{
             case "psync":
                 handlePsync(writer);
                 sendRDBFile(os);
+                replicaSockets.add(clientSocket);
                 break;
             case "set":
                 if(commandLength==3) {
@@ -73,9 +77,11 @@ public class MasterServer extends RedisServer{
                     writer.print("-ERR syntax error\r\n");
                     writer.flush();
                 }
+                propogateToReplicas(commandArray);
                 break;
             case "get":
                 handleGet(commandArray.get(4), writer);
+                propogateToReplicas(commandArray);
                 break;
             case "info":
                 if(commandArray.get(4).equalsIgnoreCase("replication")){
@@ -113,6 +119,20 @@ public class MasterServer extends RedisServer{
             bos.flush();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    private void propogateToReplicas(ArrayList<String> commandArray){
+        for(Socket replicaSocket: replicaSockets){
+            try {
+                OutputStream os = replicaSocket.getOutputStream();
+                PrintWriter writer = new PrintWriter(os, true);
+                for(String command: commandArray){
+                    writer.print(command+"\r\n");
+                }
+                writer.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
     @Override
