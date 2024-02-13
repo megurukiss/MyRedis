@@ -1,24 +1,9 @@
 import org.apache.commons.cli.*;
 
 public class RedisStarter {
-    public static void main(String[] args){
 
+    private static void parseAndStart(Options options,String[] args){
         RedisServer server=null;
-        Options options = new Options();
-        Option option = Option.builder("p")
-                .longOpt("port")
-                .numberOfArgs(1)
-                .desc("Change the port of Redis")
-                .build();
-        options.addOption(option);
-
-        option = Option.builder("repl")
-                .longOpt("replicaof")
-                .numberOfArgs(2)
-                .desc("Set the server as a slave of the server at the given IP and port")
-                .build();
-        options.addOption(option);
-
         CommandLineParser parser = new DefaultParser();
         CommandLine cmd;
         try {
@@ -44,6 +29,25 @@ public class RedisStarter {
         }
 
         server.startServer();
+    }
 
+    public static void main(String[] args){
+
+        Options options = new Options();
+        Option option = Option.builder("p")
+                .longOpt("port")
+                .numberOfArgs(1)
+                .desc("Change the port of Redis")
+                .build();
+        options.addOption(option);
+
+        option = Option.builder("repl")
+                .longOpt("replicaof")
+                .numberOfArgs(2)
+                .desc("Set the server as a slave of the server at the given IP and port")
+                .build();
+        options.addOption(option);
+
+        parseAndStart(options,args);
     }
 }
