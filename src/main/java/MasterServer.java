@@ -57,10 +57,10 @@ public class MasterServer extends RedisServer{
                 break;
             case "replconf":
                 handleReplconf(writer);
-                sendRDBFile(os);
                 break;
             case "psync":
                 handlePsync(writer);
+                sendRDBFile(os);
                 break;
             case "set":
                 if(commandLength==3) {
