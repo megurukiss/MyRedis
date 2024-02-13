@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MasterServer extends RedisServer{
     String role = "master";
@@ -124,8 +125,7 @@ public class MasterServer extends RedisServer{
     private void propogateToReplicas(ArrayList<String> commandArray){
         for(Socket replicaSocket: replicaSockets){
             try {
-                OutputStream os = replicaSocket.getOutputStream();
-                PrintWriter writer = new PrintWriter(os, true);
+                PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
                 for(String command: commandArray){
                     writer.print(command+"\r\n");
                 }
