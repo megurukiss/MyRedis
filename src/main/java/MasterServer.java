@@ -122,17 +122,14 @@ public class MasterServer extends RedisServer{
             e.printStackTrace();
         }
     }
-    private void propogateToReplicas(ArrayList<String> commandArray){
+    private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
+//        System.out.println(replicaSockets);
         for(Socket replicaSocket: replicaSockets){
-            try {
-                PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
-                for(String command: commandArray){
-                    writer.print(command+"\r\n");
-                }
-                writer.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
+            PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
+            for(String command: commandArray){
+                writer.print(command+"\r\n");
             }
+            writer.flush();
         }
     }
     @Override

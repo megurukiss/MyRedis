@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -15,6 +16,50 @@ public class SlaveServer extends RedisServer{
     }
     public void setMasterPort(int MasterPort) {
         this.MasterPort = MasterPort;
+    }
+
+    @Override
+    public void startServer() {
+        try {
+            listenToMaster();
+            serverSocket = new ServerSocket(port);
+            serverSocket.setReuseAddress(true);
+            while(true){
+                Socket clientSocket = serverSocket.accept();
+                new Thread(() ->{
+                    handleClient(clientSocket);
+                }).start();
+            }
+        } catch (IOException e) {
+            System.out.println("IOException: " + e.getMessage());
+        }
+    }
+
+    public void listenToMaster() throws IOException{
+        new Thread(() ->{
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
+                String line;
+                ArrayList<String> commandArray = new ArrayList<>();
+                int commandLength = 0;
+                while((line = reader.readLine())!=null){
+                    if(line.startsWith("+")){
+                        continue;
+                    }else {
+                        commandArray.add(line);
+                        if(commandArray.size()==1){
+                            commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
+                        }
+                        else if(commandArray.size()==commandLength){
+                            handleCommand(commandArray, masterSocket);
+                            commandArray.clear();
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     @Override
@@ -61,6 +106,7 @@ public class SlaveServer extends RedisServer{
                 break;
         }
     }
+
 
     public void handleSet(String key, String value, Socket clientSocket) throws IOException{
         map.put(key, value);
