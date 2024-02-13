@@ -25,9 +25,11 @@ public class SlaveServer extends RedisServer{
             String pingCommand= toRESP(new String[]{"PING"});
             String replconfigCommand1= toRESP(new String[]{"REPLCONF","listening-port",String.valueOf(MasterPort)});
             String replconfigCommand2= toRESP(new String[]{"REPLCONF","capa","psync2"});
+            String psyncCommand= toRESP(new String[]{"PSYNC","?","-1"});
             writer.print(pingCommand);
             writer.print(replconfigCommand1);
             writer.print(replconfigCommand2);
+            writer.print(psyncCommand);
             writer.flush();
         }catch (IOException e){
             e.printStackTrace();
