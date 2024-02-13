@@ -9,7 +9,6 @@ public class SlaveServer extends RedisServer{
     Socket masterSocket;
     public SlaveServer(){
         super();
-        connectToMaster();
     }
     public void setMasterIp(String MasterIp) {
         this.MasterIp = MasterIp;
@@ -89,13 +88,33 @@ public class SlaveServer extends RedisServer{
     }
     public void handleGet(String key, Socket clientSocket) throws IOException{
         String value = map.get(key);
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        Long expiryTime = ExpiryMap.get(key);
+        System.out.println(expiryTime);
         int remotePort = clientSocket.getPort();
         String remoteIp = clientSocket.getInetAddress().getHostAddress();
-        if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
-            writer.print("+OK\r\n");
-            writer.flush();
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        if(value!=null){
+            if(expiryTime!=null && System.currentTimeMillis()>expiryTime) {
+                map.remove(key);
+                ExpiryMap.remove(key);
+                if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
+                    writer.print("$-1\r\n");
+                    writer.flush();
+                }
+                return;
+            }
+            else {
+                if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)) {
+                    writer.print("$" + value.length() + "\r\n" + value + "\r\n");
+                }
+            }
         }
+        else{
+            if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)) {
+                writer.print("$-1\r\n");
+            }
+        }
+        writer.flush();
     }
     public void connectToMaster(){
         try{
