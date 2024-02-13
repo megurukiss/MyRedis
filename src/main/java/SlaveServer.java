@@ -44,7 +44,7 @@ public class SlaveServer extends RedisServer{
                 }
                 break;
             case "get":
-                handleGet(commandArray.get(4), clientSocket);
+                handleGet(commandArray.get(4), writer);
                 break;
             case "info":
                 if(commandArray.get(4).equalsIgnoreCase("replication")){
@@ -85,34 +85,6 @@ public class SlaveServer extends RedisServer{
             writer.print("+OK\r\n");
             writer.flush();
         }
-    }
-    public void handleGet(String key, Socket clientSocket) throws IOException{
-        String value = map.get(key);
-        Long expiryTime = ExpiryMap.get(key);
-//        System.out.println(expiryTime);
-        int remotePort = clientSocket.getPort();
-        String remoteIp = clientSocket.getInetAddress().getHostAddress();
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-        if(value!=null){
-            if(expiryTime!=null && System.currentTimeMillis()>expiryTime) {
-                map.remove(key);
-                ExpiryMap.remove(key);
-                if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
-                    writer.print("$-1\r\n");
-                }
-            }
-            else {
-                if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)) {
-                    writer.print("$" + value.length() + "\r\n" + value + "\r\n");
-                }
-            }
-        }
-        else{
-            if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)) {
-                writer.print("$-1\r\n");
-            }
-        }
-        writer.flush();
     }
     public void connectToMaster(){
         try{
