@@ -117,6 +117,7 @@ public class MasterServer extends RedisServer{
         try {
             bos.write(prefixBytes);
             bos.write(rdb);
+            bos.write("\r\n".getBytes());
             bos.flush();
         } catch (IOException e) {
             e.printStackTrace();

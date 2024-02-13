@@ -45,14 +45,17 @@ public class SlaveServer extends RedisServer{
                 while((line = reader.readLine())!=null){
                     if(line.startsWith("+")){
                         continue;
-                    }else {
+                    }else if(line.startsWith("*")){
                         commandArray.add(line);
-                        if(commandArray.size()==1){
-                            commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
+                        commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
+                    }else{
+                        if(commandArray.size()<commandLength){
+                            commandArray.add(line);
                         }
-                        else if(commandArray.size()==commandLength){
+                        if(commandArray.size()==commandLength && commandLength!=0){
                             handleCommand(commandArray, masterSocket);
                             commandArray.clear();
+                            commandLength=0;
                         }
                     }
                 }
