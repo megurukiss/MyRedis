@@ -64,7 +64,6 @@ public class SlaveServer extends RedisServer{
                             commandArray.add(sb.toString());
                             arrayLength--;
                         }
-                        System.out.println(commandArray);
                         handleCommand(commandArray, masterSocket);
                     }
                 }
@@ -101,6 +100,8 @@ public class SlaveServer extends RedisServer{
                 }
                 break;
             case "get":
+                System.out.println(commandArray);
+                System.out.println(map.toString());
                 handleGet(commandArray.get(4), writer);
                 break;
             case "info":
