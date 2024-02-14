@@ -43,6 +43,9 @@ public class SlaveServer extends RedisServer{
                 ArrayList<String> commandArray = new ArrayList<>();
                 int commandLength = 0;
                 while((line = reader.readLine())!=null){
+                    if(line.isEmpty()){
+                        continue;
+                    }
                     if(line.startsWith("+")){
                         continue;
                     }else if(line.startsWith("*")){

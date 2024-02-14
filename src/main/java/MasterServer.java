@@ -125,6 +125,7 @@ public class MasterServer extends RedisServer{
 //        System.out.println(replicaSockets);
         for(Socket replicaSocket: replicaSockets){
             PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
+            writer.print("\r\n");
             for(String command: commandArray){
                 writer.print(command+"\r\n");
             }
