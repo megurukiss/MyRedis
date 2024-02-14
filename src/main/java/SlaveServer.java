@@ -49,6 +49,7 @@ public class SlaveServer extends RedisServer{
                         // initialize array to store command
                         ArrayList<String> commandArray = new ArrayList<>();
                         commandArray.add("*"+nxtChar);
+                        //
                         is.read();
                         is.read();
                         // read array elements
