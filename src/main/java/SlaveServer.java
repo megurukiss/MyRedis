@@ -100,8 +100,6 @@ public class SlaveServer extends RedisServer{
                 }
                 break;
             case "get":
-                System.out.println(commandArray);
-                System.out.println(map.toString());
                 handleGet(commandArray.get(4), writer);
                 break;
             case "info":
@@ -111,6 +109,11 @@ public class SlaveServer extends RedisServer{
                 else{
                     writer.print("-ERR unknown subcommand or wrong number of arguments for 'info'\r\n");
                     writer.flush();
+                }
+                break;
+            case "replconf":
+                if(commandArray.get(4).equalsIgnoreCase("GETACK")){
+                    handleACK(writer);
                 }
                 break;
             default:
@@ -144,6 +147,12 @@ public class SlaveServer extends RedisServer{
             writer.print("+OK\r\n");
             writer.flush();
         }
+    }
+
+    public void handleACK(PrintWriter writer){
+        String[] ackCommand = new String[]{"REPLCONF","ACK",String.valueOf(0)};
+        writer.print(toRESP(ackCommand));
+        writer.flush();
     }
     public void connectToMaster(){
         try{
