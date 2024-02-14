@@ -12,8 +12,12 @@ public class RedisStarter {
                 server=new SlaveServer();
                 server.setRole("slave");
                 String[] replicaof = cmd.getOptionValues("replicaof");
-                if(replicaof[0].equals("localhost"))
+                if(replicaof[0].equals("localhost")) {
                     ((SlaveServer) server).setMasterIp("127.0.0.1");
+                }
+                else {
+                    ((SlaveServer) server).setMasterIp(replicaof[0]);
+                }
                 ((SlaveServer) server).setMasterPort(Integer.parseInt(replicaof[1]));
                 ((SlaveServer) server).connectToMaster();
             }else{

@@ -53,6 +53,7 @@ public class SlaveServer extends RedisServer{
                             commandArray.add(line);
                         }
                         if(commandArray.size()==commandLength && commandLength!=0){
+                            System.out.println("Received command from master: "+commandArray);
                             handleCommand(commandArray, masterSocket);
                             commandArray.clear();
                             commandLength=0;
