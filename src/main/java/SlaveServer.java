@@ -46,7 +46,6 @@ public class SlaveServer extends RedisServer{
                         int nxtChar= is.read()-48;
                         // convert ascii to integer
                         int arrayLength = nxtChar*2;
-                        System.out.println(arrayLength);
                         // initialize array to store command
                         ArrayList<String> commandArray = new ArrayList<>();
                         commandArray.add("*"+nxtChar);
