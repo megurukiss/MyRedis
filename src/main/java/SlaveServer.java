@@ -7,7 +7,7 @@ public class SlaveServer extends RedisServer{
     String role = "slave";
     String MasterIp;
     int MasterPort;
-    Socket masterSocket;
+    Socket masterSocket=null;
     public SlaveServer(){
         super();
     }
@@ -38,29 +38,35 @@ public class SlaveServer extends RedisServer{
     public void listenToMaster() throws IOException{
         new Thread(() ->{
             try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(masterSocket.getInputStream()));
-                String line;
-                ArrayList<String> commandArray = new ArrayList<>();
-                int commandLength = 0;
-                while((line = reader.readLine())!=null){
-                    if(line.isEmpty()){
-                        continue;
-                    }
-                    if(line.startsWith("+")){
-                        continue;
-                    }else if(line.startsWith("*")){
-                        commandArray.add(line);
-                        commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
-                    }else {
-                        if(commandArray.size()<commandLength){
-                            commandArray.add(line);
+                InputStream is = masterSocket.getInputStream();
+                int ch;
+                while((ch = is.read()) != -1){
+                    if(ch=='*'){
+                        // read array length
+                        int nxtChar= is.read()-48;
+                        // convert ascii to integer
+                        int arrayLength = nxtChar*2;
+                        System.out.println(arrayLength);
+                        // initialize array to store command
+                        ArrayList<String> commandArray = new ArrayList<>();
+                        commandArray.add("*"+nxtChar);
+                        is.read();
+                        is.read();
+                        // read array elements
+                        while(arrayLength>0){
+                            StringBuilder sb = new StringBuilder();
+                            while((ch = is.read()) != -1){
+                                if(ch=='\r'){
+                                    break;
+                                }
+                                sb.append((char)ch);
+                            }
+                            is.read();
+                            commandArray.add(sb.toString());
+                            arrayLength--;
                         }
-                        if(commandArray.size()==commandLength && commandLength!=0){
-                            System.out.println("Received command from master: "+commandArray);
-                            handleCommand(commandArray, masterSocket);
-                            commandArray.clear();
-                            commandLength=0;
-                        }
+                        System.out.println(commandArray);
+                        handleCommand(commandArray, masterSocket);
                     }
                 }
             } catch (IOException e) {
