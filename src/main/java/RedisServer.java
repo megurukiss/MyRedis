@@ -153,15 +153,18 @@ public class RedisServer {
             if(expiryTime!=null && System.currentTimeMillis()>expiryTime) {
                 map.remove(key);
                 ExpiryMap.remove(key);
+                System.out.println("Key expired");
                 writer.print("$-1\r\n");
                 writer.flush();
                 return;
             }
             else {
+                System.out.println("Key found");
                 writer.print("$" + value.length() + "\r\n" + value + "\r\n");
             }
         }
         else{
+            System.out.println("Key not found");
             writer.print("$-1\r\n");
         }
         writer.flush();
