@@ -79,9 +79,12 @@ public class MasterServer extends RedisServer{
                 // check if the client is a replica
                 /*addReplica(clientSocket);*/
                 /*replicaSockets.add(clientSocket);*/
-                replicaSockets.add(clientSocket);
-                /*System.out.println(replicaSockets);*/
-                startRepliThread(clientSocket);
+                // if client not in replicaSockets, add it
+                if(!replicaSockets.contains(clientSocket)){
+                    replicaSockets.add(clientSocket);
+                    /*System.out.println(replicaSockets);*/
+                    startRepliThread(clientSocket);
+                }
                 break;
             case "echo":
                 handleEcho(commandArray.get(4), writer);
@@ -108,7 +111,6 @@ public class MasterServer extends RedisServer{
                 break;
             case "get":
                 handleGet(commandArray.get(4), writer);
-//                propogateToReplicas(commandArray);
                 break;
             case "info":
                 if(commandArray.get(4).equalsIgnoreCase("replication")){
@@ -149,7 +151,7 @@ public class MasterServer extends RedisServer{
     }
     private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
         System.out.println(replicaSockets);
-        checkReplicaSockets();
+//        checkReplicaSockets();
         for(Socket replicaSocket: replicaSockets){
             PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
             for(String command: commandArray){

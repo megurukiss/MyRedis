@@ -261,4 +261,20 @@ public class RedisServer {
         throw new IOException("Error reading command");
     }
 
+    public static ArrayList<String> readCommandByLine(Socket socket) throws IOException{
+        BufferedReader reader=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String line;
+        ArrayList<String> commandArray = new ArrayList<>();
+        int commandLength=0;
+        while ((line = reader.readLine()) != null) {
+            commandArray.add(line);
+            if (commandArray.size() == 1) {
+                commandLength = Integer.parseInt(commandArray.getFirst().substring(1)) * 2 + 1;
+            } else if (commandArray.size() == commandLength) {
+                return commandArray;
+            }
+        }
+        throw new IOException("Error reading command");
+    }
+
 }

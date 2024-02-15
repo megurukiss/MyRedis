@@ -129,7 +129,7 @@ public class SlaveServer extends RedisServer{
         new Thread(() ->{
             try {
                 while (true){
-                    ArrayList<String> commandArray = readCommand(masterSocket);
+                    ArrayList<String> commandArray = readCommandByLine(masterSocket);
                     System.out.println(commandArray);
                     handleCommand(commandArray, masterSocket);
                 }
