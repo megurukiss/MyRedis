@@ -77,8 +77,11 @@ public class MasterServer extends RedisServer{
             case "ping":
                 handlePing(writer);
                 // check if the client is a replica
-                addReplica(clientSocket);
+                /*addReplica(clientSocket);*/
                 /*replicaSockets.add(clientSocket);*/
+                replicaSockets.add(clientSocket);
+                System.out.println(replicaSockets);
+                startRepliThread(clientSocket);
                 break;
             case "echo":
                 handleEcho(commandArray.get(4), writer);
