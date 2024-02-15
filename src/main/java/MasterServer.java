@@ -208,4 +208,14 @@ public class MasterServer extends RedisServer{
             }
         }).start();
     }
+
+    public void checkReplicaSockets(){
+        for(Socket replicaSocket: replicaSockets){
+            try {
+                replicaSocket.sendUrgentData(0);
+            } catch (IOException e) {
+                replicaSockets.remove(replicaSocket);
+            }
+        }
+    }
 }

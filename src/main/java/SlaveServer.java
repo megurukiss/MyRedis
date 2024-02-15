@@ -209,6 +209,7 @@ public class SlaveServer extends RedisServer{
     }
 
     public static void checkMessageByRegex(String message,String regex) throws IOException{
+        System.out.println(message);
         Pattern pattern = Pattern.compile(regex);
         if(!pattern.matcher(message).matches()){
             throw new IOException("Connection to master failed");
