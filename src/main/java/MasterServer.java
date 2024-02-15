@@ -215,7 +215,9 @@ public class MasterServer extends RedisServer{
         while (iterator.hasNext()) {
             Socket replicaSocket = iterator.next();
             try {
-                replicaSocket.sendUrgentData(0);
+                PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
+                writer.print("*1\r\n$4\r\nping\r\n");
+                writer.flush();
             } catch (IOException e) {
                 replicaSockets.remove(replicaSocket);
             }
