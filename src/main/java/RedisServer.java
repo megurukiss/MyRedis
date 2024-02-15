@@ -200,13 +200,18 @@ public class RedisServer {
         ArrayList<String> commandArray = new ArrayList<>();
         int commandLength=0;
         while ((line = reader.readLine()) != null) {
-            commandArray.add(line);
-            if (commandArray.size() == 1) {
-                commandLength = Integer.parseInt(commandArray.getFirst().substring(1)) * 2 + 1;
-            } else if (commandArray.size() == commandLength) {
-//                System.out.println(commandArray);
-                handleCommand(commandArray, replicaSocket);
+            try{
+                commandArray.add(line);
+                if (commandArray.size() == 1) {
+                    commandLength = Integer.parseInt(commandArray.getFirst().substring(1)) * 2 + 1;
+                } else if (commandArray.size() == commandLength) {
+                    System.out.println(commandArray);
+                    handleCommand(commandArray, replicaSocket);
+                    commandArray.clear();
+                }
+            }catch (Exception e){
                 commandArray.clear();
+                System.out.println("Exception: "+e.getMessage());
             }
         }
     }

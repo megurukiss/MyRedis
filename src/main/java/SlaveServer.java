@@ -69,6 +69,7 @@ public class SlaveServer extends RedisServer{
                     writer.print("-ERR syntax error\r\n");
                     writer.flush();
                 }
+                System.out.println(map);
                 break;
             case "get":
                 handleGet(commandArray.get(4), writer);
@@ -129,9 +130,7 @@ public class SlaveServer extends RedisServer{
         new Thread(() ->{
             try {
                 while (true){
-                    ArrayList<String> commandArray = readCommandByLine(masterSocket);
-                    System.out.println(commandArray);
-                    handleCommand(commandArray, masterSocket);
+                    listenToSocketCommand(masterSocket);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
