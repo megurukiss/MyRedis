@@ -9,10 +9,10 @@ public class MasterServer extends RedisServer{
     String role = "master";
     private static final String MASTER_REPLID = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
     private static final String MASTER_REPL_OFFSET = "0";
-    private final HashSet<Socket> replicaSockets;
+    private final LinkedList<Socket> replicaSockets;
     public MasterServer(){
         super();
-        replicaSockets = new HashSet<>();
+        replicaSockets = new LinkedList<>();
     }
 
     @Override
@@ -80,7 +80,7 @@ public class MasterServer extends RedisServer{
                 /*addReplica(clientSocket);*/
                 /*replicaSockets.add(clientSocket);*/
                 replicaSockets.add(clientSocket);
-                System.out.println(replicaSockets);
+                /*System.out.println(replicaSockets);*/
                 startRepliThread(clientSocket);
                 break;
             case "echo":
@@ -149,6 +149,7 @@ public class MasterServer extends RedisServer{
     }
     private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
         System.out.println(replicaSockets);
+        checkReplicaSockets();
         for(Socket replicaSocket: replicaSockets){
             PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
             for(String command: commandArray){
@@ -210,7 +211,9 @@ public class MasterServer extends RedisServer{
     }
 
     public void checkReplicaSockets(){
-        for(Socket replicaSocket: replicaSockets){
+        Iterator<Socket> iterator = replicaSockets.iterator();
+        while (iterator.hasNext()) {
+            Socket replicaSocket = iterator.next();
             try {
                 replicaSocket.sendUrgentData(0);
             } catch (IOException e) {
