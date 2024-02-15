@@ -158,7 +158,7 @@ public class SlaveServer extends RedisServer{
             checkMessage(readMessage(tempSocket),"+OK");
             writer.print(psyncCommand);
             writer.flush();
-            checkMessageByRegex(readMessage(tempSocket),"^\\+FULLRESYNC ([a-fA-F0-9]+) ([0-9]+)$");
+            checkMessageByRegex(readMessage(tempSocket),"^\\+FULLRESYNC ([a-zA-Z0-9]+) ([0-9]+)$");
             byte[] fileContent= readRDBFile(tempSocket);
 
             masterSocket = tempSocket;
@@ -209,7 +209,6 @@ public class SlaveServer extends RedisServer{
     }
 
     public static void checkMessageByRegex(String message,String regex) throws IOException{
-        System.out.println(message);
         Pattern pattern = Pattern.compile(regex);
         if(!pattern.matcher(message).matches()){
             throw new IOException("Connection to master failed");
