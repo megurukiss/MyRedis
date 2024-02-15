@@ -1,10 +1,8 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashSet;
+import java.net.SocketTimeoutException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MasterServer extends RedisServer{
@@ -147,7 +145,7 @@ public class MasterServer extends RedisServer{
         }
     }
     private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
-//        System.out.println(replicaSockets);
+        System.out.println(replicaSockets);
         for(Socket replicaSocket: replicaSockets){
             PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
             for(String command: commandArray){
@@ -170,21 +168,21 @@ public class MasterServer extends RedisServer{
 
     private void addReplica(Socket replicaSocket) throws IOException{
         // wait for following commands
-        // wait for 30s if no command is received, close the connection
+        // wait for 1s if no command is received
         ArrayList<String> replconf = readCommand(replicaSocket);
         /*System.out.println(replconf);*/
         handleCommand(replconf, replicaSocket);
-        if (!replconf.get(2).equalsIgnoreCase("REPLCONF") && !replconf.get(4).equalsIgnoreCase("listening-port")) {
+        if (!(replconf.size()==7) || !(replconf.get(2).equalsIgnoreCase("REPLCONF") && replconf.get(4).equalsIgnoreCase("listening-port"))) {
             return;
         }
-        ArrayList<String> replconf2 = readCommand(replicaSocket);
+        ArrayList<String> replconf2= readCommand(replicaSocket);
         /*System.out.println(replconf2);*/
         handleCommand(replconf2, replicaSocket);
-        if(!replconf2.get(2).equalsIgnoreCase("REPLCONF") && !replconf2.get(4).equalsIgnoreCase("capa")
-                && !replconf2.get(6).equalsIgnoreCase("psync2")){
+        if(!(replconf2.size()==7) || !(replconf2.get(2).equalsIgnoreCase("REPLCONF") && replconf2.get(4).equalsIgnoreCase("capa")
+                && replconf2.get(6).equalsIgnoreCase("psync2"))){
             return;
         }
-        ArrayList<String> psync = readCommand(replicaSocket);
+        ArrayList<String> psync=readCommand(replicaSocket);
         /*System.out.println(psync);*/
         handleCommand(psync, replicaSocket);
         if(!psync.get(2).equalsIgnoreCase("PSYNC")){

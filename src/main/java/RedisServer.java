@@ -200,7 +200,7 @@ public class RedisServer {
             if (commandArray.size() == 1) {
                 commandLength = Integer.parseInt(commandArray.getFirst().substring(1)) * 2 + 1;
             } else if (commandArray.size() == commandLength) {
-                System.out.println(commandArray);
+//                System.out.println(commandArray);
                 handleCommand(commandArray, replicaSocket);
                 commandArray.clear();
             }
