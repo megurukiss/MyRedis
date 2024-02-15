@@ -19,7 +19,6 @@ public class RedisStarter {
                     ((SlaveServer) server).setMasterIp(replicaof[0]);
                 }
                 ((SlaveServer) server).setMasterPort(Integer.parseInt(replicaof[1]));
-                ((SlaveServer) server).connectToMaster();
             }else{
                 server=new MasterServer();
                 server.setRole("master");
@@ -36,6 +35,9 @@ public class RedisStarter {
         }
 
         server.startServer();
+        if(server instanceof SlaveServer){
+            ((SlaveServer) server).connectToMaster();
+        }
     }
 
     public static void main(String[] args){

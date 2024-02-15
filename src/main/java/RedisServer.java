@@ -25,17 +25,37 @@ public class RedisServer {
         this.role = role;
     }
 
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    public int getPort() {
+        return port;
+    }
 
     public void startServer() {
         try {
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
-            while(true){
+            /*while(true){
                 Socket clientSocket = serverSocket.accept();
                 new Thread(() ->{
                     handleClient(clientSocket);
                 }).start();
-            }
+            }*/
+            // start a thread for serverSocket
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        Socket clientSocket = serverSocket.accept();
+                        new Thread(() -> {
+                            handleClient(clientSocket);
+                        }).start();
+                    } catch (IOException e) {
+                        System.out.println("IOException: " + e.getMessage());
+                    }
+                }
+            }).start();
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         }
@@ -43,21 +63,7 @@ public class RedisServer {
 
     public void handleClient(Socket clientSocket) {
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-//            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-            String line;
-            ArrayList<String> commandArray = new ArrayList<>();
-            int commandLength=0;
-            while ((line = reader.readLine()) != null) {
-                commandArray.add(line);
-                if(commandArray.size()==1){
-                    commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
-                }
-                else if(commandArray.size()==commandLength){
-                    handleCommand(commandArray, clientSocket);
-                    commandArray.clear();
-                }
-            }
+            listenToSocketCommand(clientSocket);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         }finally {
@@ -183,4 +189,24 @@ public class RedisServer {
         }
         return response.toString();
     }
+
+    public void listenToSocketCommand(Socket replicaSocket) throws IOException{
+        BufferedReader reader=new BufferedReader(new InputStreamReader(replicaSocket.getInputStream()));
+        String line;
+        ArrayList<String> commandArray = new ArrayList<>();
+        int commandLength=0;
+        System.out.println(replicaSocket.getPort());
+        while ((line = reader.readLine()) != null) {
+            commandArray.add(line);
+            if (commandArray.size() == 1) {
+                commandLength = Integer.parseInt(commandArray.getFirst().substring(1)) * 2 + 1;
+            } else if (commandArray.size() == commandLength) {
+                System.out.println(commandArray);
+                handleCommand(commandArray, replicaSocket);
+                commandArray.clear();
+            }
+        }
+    }
+
+
 }

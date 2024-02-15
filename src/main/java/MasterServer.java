@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,23 +18,44 @@ public class MasterServer extends RedisServer{
     }
 
     @Override
+    public void startServer() {
+        try {
+            serverSocket = new ServerSocket(port);
+            serverSocket.setReuseAddress(true);
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        Socket clientSocket = serverSocket.accept();
+                        new Thread(() -> {
+                            handleClient(clientSocket);
+                        }).start();
+                    } catch (IOException e) {
+                        System.out.println("IOException: " + e.getMessage());
+                    }
+                }
+            }).start();
+            // start a thread for replicaSockets
+            for (Socket replicaSocket : replicaSockets) {
+                new Thread(() -> {
+                    try {
+                        listenToSocketCommand(replicaSocket);
+                    } catch (IOException e) {
+                        System.out.println("IOException: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }).start();
+            }
+
+        } catch (IOException e) {
+            System.out.println("IOException: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void handleClient(Socket clientSocket) {
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-//            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
-            String line;
-            ArrayList<String> commandArray = new ArrayList<>();
-            int commandLength=0;
-            while ((line = reader.readLine()) != null) {
-                commandArray.add(line);
-                if(commandArray.size()==1){
-                    commandLength = Integer.parseInt(commandArray.getFirst().substring(1))*2+1;
-                }
-                else if(commandArray.size()==commandLength){
-                    handleCommand(commandArray, clientSocket);
-                    commandArray.clear();
-                }
-            }
+            listenToSocketCommand(clientSocket);
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         }finally {
@@ -47,6 +69,7 @@ public class MasterServer extends RedisServer{
         }
     }
 
+    @Override
     public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
         int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
         OutputStream os = clientSocket.getOutputStream();
@@ -55,6 +78,7 @@ public class MasterServer extends RedisServer{
         switch (command.toLowerCase()){
             case "ping":
                 handlePing(writer);
+                replicaSockets.add(clientSocket);
                 break;
             case "echo":
                 handleEcho(commandArray.get(4), writer);
@@ -65,7 +89,6 @@ public class MasterServer extends RedisServer{
             case "psync":
                 handlePsync(writer);
                 sendRDBFile(os);
-                replicaSockets.add(clientSocket);
                 break;
             case "set":
                 if(commandLength==3) {
@@ -142,4 +165,5 @@ public class MasterServer extends RedisServer{
         writer.print(info);
         writer.flush();
     }
+
 }

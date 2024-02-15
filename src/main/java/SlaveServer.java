@@ -22,53 +22,32 @@ public class SlaveServer extends RedisServer{
     @Override
     public void startServer() {
         try {
-            listenToMaster();
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
-            while(true){
-                Socket clientSocket = serverSocket.accept();
-                new Thread(() ->{
-                    handleClient(clientSocket);
-                }).start();
-            }
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        Socket clientSocket = serverSocket.accept();
+                        new Thread(() -> {
+                            handleClient(clientSocket);
+                        }).start();
+                    } catch (IOException e) {
+                        System.out.println("IOException: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void listenToMaster() throws IOException{
         new Thread(() ->{
             try {
-                InputStream is = masterSocket.getInputStream();
-                int ch;
-                while((ch = is.read()) != -1){
-                    if(ch=='*'){
-                        // read array length
-                        int nxtChar= is.read()-48;
-                        // convert ascii to integer
-                        int arrayLength = nxtChar*2;
-                        // initialize array to store command
-                        ArrayList<String> commandArray = new ArrayList<>();
-                        commandArray.add("*"+nxtChar);
-                        //
-                        is.read();
-                        is.read();
-                        // read array elements
-                        while(arrayLength>0){
-                            StringBuilder sb = new StringBuilder();
-                            while((ch = is.read()) != -1){
-                                if(ch=='\r'){
-                                    break;
-                                }
-                                sb.append((char)ch);
-                            }
-                            is.read();
-                            commandArray.add(sb.toString());
-                            arrayLength--;
-                        }
-                        handleCommand(commandArray, masterSocket);
-                    }
-                }
+                ArrayList<String> commandArray= readCommand(masterSocket);
+                handleCommand(commandArray, masterSocket);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -125,7 +104,6 @@ public class SlaveServer extends RedisServer{
         }
     }
 
-
     public void handleSet(String key, String value, Socket clientSocket) throws IOException{
         map.put(key, value);
         int remotePort = clientSocket.getPort();
@@ -165,19 +143,22 @@ public class SlaveServer extends RedisServer{
             String replconfigCommand2= toRESP(new String[]{"REPLCONF","capa","psync2"});
             String psyncCommand= toRESP(new String[]{"PSYNC","?","-1"});
             writer.print(pingCommand);
+            writer.flush();
             // receive message like +PONG and check if it is +PONG
-           checkMessage(readMessage(tempSocket),"+PONG");
+            checkMessage(readMessage(tempSocket),"+PONG");
             writer.print(replconfigCommand1);
+            writer.flush();
             checkMessage(readMessage(tempSocket),"+OK");
             writer.print(replconfigCommand2);
+            writer.flush();
             checkMessage(readMessage(tempSocket),"+OK");
             writer.print(psyncCommand);
+            writer.flush();
             checkMessageByRegex(readMessage(tempSocket),"^\\+FULLRESYNC ([a-fA-F0-9]+) ([0-9]+)$");
-            readMessage(tempSocket);
             byte[] fileContent= readRDBFile(tempSocket);
 
             masterSocket = tempSocket;
-            writer.flush();
+            listenToMaster();
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -187,25 +168,31 @@ public class SlaveServer extends RedisServer{
         InputStream is = socket.getInputStream();
         int ch;
         StringBuilder sb = new StringBuilder();
+        Boolean messageStarted = false;
         while((ch = is.read()) != -1){
             // skip starting \r\n
-            if(ch=='\r' || ch=='\n'){
+            if(!messageStarted && (ch=='\r' || ch=='\n')){
                 continue;
             }
             if(ch=='+'){
+                messageStarted = true;
                 sb.append((char)ch);
-                while((ch = is.read()) != -1){
-                    if(ch=='\r' || ch=='\n'){
-                        break;
-                    }
-                    sb.append((char)ch);
-                }
-                break;
+                continue;
             }
-            else{
+            if (messageStarted) {
+                if (ch == '\r' || ch == '\n') {
+                    break; // End of message
+                }
+                sb.append((char) ch);
+            } else{
                 throw new IOException("Not a valid message");
             }
         }
+
+        if (sb.isEmpty()) {
+            throw new IOException("Empty message or connection closed");
+        }
+
         System.out.println(sb.toString());
         return sb.toString();
     }
@@ -235,23 +222,30 @@ public class SlaveServer extends RedisServer{
             if(ch=='$'){
                 // read array length until \r\n
                 StringBuilder sb= new StringBuilder();
-                while((ch=is.read())!=-1){
-                    if(ch=='\r' || ch=='\n'){
-                        break;
+                while ((ch = is.read()) != -1) {
+                    if (ch == '\r') { // Expecting \r\n sequence
+                        if ((ch = is.read()) == '\n') {
+                            break;
+                        } else {
+                            throw new IOException("Malformed length terminator");
+                        }
                     }
-                    sb.append((char)ch);
+                    sb.append((char) ch);
                 }
                 int arrayLength = Integer.parseInt(sb.toString());
                 // create byte array to store file content
                 byte[] fileContent = new byte[arrayLength];
                 // read file content
-                int label= is.read(fileContent,0,arrayLength);
-                if(label==-1){
-                    throw new IOException("Error reading file content");
+                int bytesRead = 0;
+                while (bytesRead < arrayLength) {
+                    int result = is.read(fileContent, bytesRead, arrayLength - bytesRead);
+                    if (result == -1) {
+                        throw new IOException("Error reading file content; stream ended prematurely");
+                    }
+                    bytesRead += result;
                 }
                 return fileContent;
-            }
-            else{
+            } else{
                 throw new IOException("Not a valid message");
             }
         }
@@ -269,11 +263,15 @@ public class SlaveServer extends RedisServer{
             if(ch=='*'){
                 // read array length until \r\n
                 StringBuilder lengthString= new StringBuilder();
-                while((ch=is.read())!=-1){
-                    if(ch=='\r' || ch=='\n'){
-                        break;
+                while ((ch = is.read()) != -1) {
+                    if (ch == '\r') { // Expect \r\n as line terminator
+                        if ((ch = is.read()) == '\n') {
+                            break;
+                        } else {
+                            throw new IOException("Malformed command: Expected '\\n' after '\\r'");
+                        }
                     }
-                    lengthString.append((char)ch);
+                    lengthString.append((char) ch);
                 }
                 int halfLength = Integer.parseInt(lengthString.toString());
                 // convert ascii to integer
@@ -281,19 +279,19 @@ public class SlaveServer extends RedisServer{
                 // initialize array to store command
                 ArrayList<String> commandArray = new ArrayList<>();
                 commandArray.add("*"+halfLength);
-                // skip \r\n
-                is.read();
-                is.read();
                 // read array elements
                 while(arrayLength>0){
                     StringBuilder sb = new StringBuilder();
                     while((ch = is.read()) != -1){
-                        if(ch=='\r'){
-                            break;
+                        if (ch == '\r') {
+                            if ((ch = is.read()) == '\n') {
+                                break;
+                            } else {
+                                throw new IOException("Malformed command: Expected '\\n' after '\\r'");
+                            }
                         }
                         sb.append((char)ch);
                     }
-                    is.read();
                     commandArray.add(sb.toString());
                     arrayLength--;
                 }
