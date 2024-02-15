@@ -97,6 +97,7 @@ public class MasterServer extends RedisServer{
                 sendRDBFile(os);
                 break;
             case "set":
+                propogateToReplicas(commandArray);
                 if(commandLength==3) {
                     handleSet(commandArray.get(4), commandArray.get(6), writer);
                 }else if(commandLength==5){
@@ -107,7 +108,6 @@ public class MasterServer extends RedisServer{
                     writer.print("-ERR syntax error\r\n");
                     writer.flush();
                 }
-                propogateToReplicas(commandArray);
                 break;
             case "get":
                 handleGet(commandArray.get(4), writer);
