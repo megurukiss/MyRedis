@@ -147,6 +147,7 @@ public class RedisServer {
     }
 
     public void handleGet(String key, PrintWriter writer){
+        System.out.println("Key: "+key);
         String value = map.get(key);
         Long expiryTime = ExpiryMap.get(key);
         if(value!=null){
