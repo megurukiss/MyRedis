@@ -183,13 +183,15 @@ public class MasterServer extends RedisServer{
             return;
         }
         ArrayList<String> psync=readCommand(replicaSocket);
-        /*System.out.println(psync);*/
+        System.out.println(psync);
         handleCommand(psync, replicaSocket);
         if(!psync.get(2).equalsIgnoreCase("PSYNC")){
             return;
         }
+        System.out.println(replicaSocket);
         startRepliThread(replicaSocket);
         replicaSockets.add(replicaSocket);
+        System.out.println(replicaSockets);
     }
 
     public void startRepliThread(Socket replicaSocket) throws IOException{
