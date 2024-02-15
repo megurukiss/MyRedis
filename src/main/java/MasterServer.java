@@ -35,7 +35,7 @@ public class MasterServer extends RedisServer{
                 }
             }).start();
             // start a thread for replicaSockets
-            for (Socket replicaSocket : replicaSockets) {
+            /*for (Socket replicaSocket : replicaSockets) {
                 new Thread(() -> {
                     try {
                         listenToSocketCommand(replicaSocket);
@@ -44,7 +44,7 @@ public class MasterServer extends RedisServer{
                         e.printStackTrace();
                     }
                 }).start();
-            }
+            }*/
 
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
@@ -78,7 +78,9 @@ public class MasterServer extends RedisServer{
         switch (command.toLowerCase()){
             case "ping":
                 handlePing(writer);
-                replicaSockets.add(clientSocket);
+                // check if the client is a replica
+                addReplica(clientSocket);
+                /*replicaSockets.add(clientSocket);*/
                 break;
             case "echo":
                 handleEcho(commandArray.get(4), writer);
@@ -166,4 +168,40 @@ public class MasterServer extends RedisServer{
         writer.flush();
     }
 
+    private void addReplica(Socket replicaSocket) throws IOException{
+        // wait for following commands
+        // wait for 30s if no command is received, close the connection
+        ArrayList<String> replconf = readCommand(replicaSocket);
+        /*System.out.println(replconf);*/
+        handleCommand(replconf, replicaSocket);
+        if (!replconf.get(2).equalsIgnoreCase("REPLCONF") && !replconf.get(4).equalsIgnoreCase("listening-port")) {
+            return;
+        }
+        ArrayList<String> replconf2 = readCommand(replicaSocket);
+        /*System.out.println(replconf2);*/
+        handleCommand(replconf2, replicaSocket);
+        if(!replconf2.get(2).equalsIgnoreCase("REPLCONF") && !replconf2.get(4).equalsIgnoreCase("capa")
+                && !replconf2.get(6).equalsIgnoreCase("psync2")){
+            return;
+        }
+        ArrayList<String> psync = readCommand(replicaSocket);
+        /*System.out.println(psync);*/
+        handleCommand(psync, replicaSocket);
+        if(!psync.get(2).equalsIgnoreCase("PSYNC")){
+            return;
+        }
+        startRepliThread(replicaSocket);
+        replicaSockets.add(replicaSocket);
+    }
+
+    public void startRepliThread(Socket replicaSocket) throws IOException{
+        new Thread(() -> {
+            try {
+                listenToSocketCommand(replicaSocket);
+            } catch (IOException e) {
+                System.out.println("IOException: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }).start();
+    }
 }

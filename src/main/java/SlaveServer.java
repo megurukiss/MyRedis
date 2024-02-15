@@ -139,7 +139,7 @@ public class SlaveServer extends RedisServer{
             Socket tempSocket = new Socket(MasterIp, MasterPort);
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(tempSocket.getOutputStream()));
             String pingCommand= toRESP(new String[]{"PING"});
-            String replconfigCommand1= toRESP(new String[]{"REPLCONF","listening-port",String.valueOf(MasterPort)});
+            String replconfigCommand1= toRESP(new String[]{"REPLCONF","listening-port",String.valueOf(this.port)});
             String replconfigCommand2= toRESP(new String[]{"REPLCONF","capa","psync2"});
             String psyncCommand= toRESP(new String[]{"PSYNC","?","-1"});
             writer.print(pingCommand);
@@ -193,7 +193,7 @@ public class SlaveServer extends RedisServer{
             throw new IOException("Empty message or connection closed");
         }
 
-        System.out.println(sb.toString());
+//        System.out.println(sb.toString());
         return sb.toString();
     }
 
@@ -252,55 +252,5 @@ public class SlaveServer extends RedisServer{
         throw new IOException("Error reading file content");
     }
 
-    public ArrayList<String> readCommand(Socket socket) throws IOException{
-        InputStream is = socket.getInputStream();
-        int ch;
-        while((ch = is.read()) != -1){
-            // skip starting \r\n
-            if(ch=='\r' || ch=='\n'){
-                continue;
-            }
-            if(ch=='*'){
-                // read array length until \r\n
-                StringBuilder lengthString= new StringBuilder();
-                while ((ch = is.read()) != -1) {
-                    if (ch == '\r') { // Expect \r\n as line terminator
-                        if ((ch = is.read()) == '\n') {
-                            break;
-                        } else {
-                            throw new IOException("Malformed command: Expected '\\n' after '\\r'");
-                        }
-                    }
-                    lengthString.append((char) ch);
-                }
-                int halfLength = Integer.parseInt(lengthString.toString());
-                // convert ascii to integer
-                int arrayLength = halfLength*2;
-                // initialize array to store command
-                ArrayList<String> commandArray = new ArrayList<>();
-                commandArray.add("*"+halfLength);
-                // read array elements
-                while(arrayLength>0){
-                    StringBuilder sb = new StringBuilder();
-                    while((ch = is.read()) != -1){
-                        if (ch == '\r') {
-                            if ((ch = is.read()) == '\n') {
-                                break;
-                            } else {
-                                throw new IOException("Malformed command: Expected '\\n' after '\\r'");
-                            }
-                        }
-                        sb.append((char)ch);
-                    }
-                    commandArray.add(sb.toString());
-                    arrayLength--;
-                }
-                return commandArray;
-            }else{
-                throw new IOException("Not a valid command");
-            }
-        }
-        throw new IOException("Error reading command");
-    }
 
 }
