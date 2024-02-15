@@ -43,16 +43,6 @@ public class SlaveServer extends RedisServer{
         }
     }
 
-    public void listenToMaster() throws IOException{
-        new Thread(() ->{
-            try {
-                ArrayList<String> commandArray= readCommand(masterSocket);
-                handleCommand(commandArray, masterSocket);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
-    }
 
     @Override
     public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
@@ -133,6 +123,20 @@ public class SlaveServer extends RedisServer{
         String[] ackCommand = new String[]{"REPLCONF","ACK",String.valueOf(0)};
         writer.print(toRESP(ackCommand));
         writer.flush();
+    }
+
+    public void listenToMaster() throws IOException{
+        new Thread(() ->{
+            try {
+                while (true){
+                    ArrayList<String> commandArray = readCommand(masterSocket);
+                    System.out.println(commandArray);
+                    handleCommand(commandArray, masterSocket);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
     public void connectToMaster(){
         try{
