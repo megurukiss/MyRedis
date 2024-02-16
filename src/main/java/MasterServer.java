@@ -121,6 +121,9 @@ public class MasterServer extends RedisServer{
                     writer.flush();
                 }
                 break;
+            case "wait":
+                handleWait(clientSocket);
+                break;
             default:
                 writer.print("-ERR unknown command '"+command+"'\r\n");
                 writer.flush();
@@ -220,6 +223,8 @@ public class MasterServer extends RedisServer{
                 PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
                 writer.print("*1\r\n$4\r\nping\r\n");
                 writer.flush();
+                // receive pong
+                String pong = readMessage(replicaSocket);
             } catch (IOException e) {
                 replicaSockets.remove(replicaSocket);
             }

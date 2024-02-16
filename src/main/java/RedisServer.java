@@ -175,6 +175,11 @@ public class RedisServer {
         writer.print(bulkString("role:"+role));
         writer.flush();
     }
+    public void handleWait(Socket clientSocket) throws IOException{
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        writer.print(":0\r\n");
+        writer.flush();
+    }
 
     public static String bulkString(String message){
         return "$"+message.length()+"\r\n"+message+"\r\n";
@@ -280,6 +285,39 @@ public class RedisServer {
             }
         }
         throw new IOException("Error reading command");
+    }
+
+    public static String readMessage(Socket socket) throws IOException{
+        InputStream is = socket.getInputStream();
+        int ch;
+        StringBuilder sb = new StringBuilder();
+        Boolean messageStarted = false;
+        while((ch = is.read()) != -1){
+            // skip starting \r\n
+            if(!messageStarted && (ch=='\r' || ch=='\n')){
+                continue;
+            }
+            if(ch=='+'){
+                messageStarted = true;
+                sb.append((char)ch);
+                continue;
+            }
+            if (messageStarted) {
+                if (ch == '\r' || ch == '\n') {
+                    break; // End of message
+                }
+                sb.append((char) ch);
+            } else{
+                throw new IOException("Not a valid message");
+            }
+        }
+
+        if (sb.isEmpty()) {
+            throw new IOException("Empty message or connection closed");
+        }
+
+//        System.out.println(sb.toString());
+        return sb.toString();
     }
 
 }

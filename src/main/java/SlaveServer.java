@@ -112,10 +112,8 @@ public class SlaveServer extends RedisServer{
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         int remotePort = clientSocket.getPort();
         String remoteIp = clientSocket.getInetAddress().getHostAddress();
-        if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
-            writer.print("+PONG\r\n");
-            writer.flush();
-        }
+        writer.print("+PONG\r\n");
+        writer.flush();
     }
 
     public void handleSet(String key, String value, Socket clientSocket) throws IOException{
@@ -148,11 +146,6 @@ public class SlaveServer extends RedisServer{
         writer.print(toRESP(ackCommand));
         writer.flush();
         startACKCounting = true;
-    }
-    public void handleWait(Socket clientSocket) throws IOException{
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-        writer.print(":0\r\n");
-        writer.flush();
     }
 
     public void listenToMaster() throws IOException{
