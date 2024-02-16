@@ -159,12 +159,6 @@ public class MasterServer extends RedisServer{
             }
             writer.flush();
         }
-        // wait for 30ms
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
     @Override
     public void handleInfo(PrintWriter writer){

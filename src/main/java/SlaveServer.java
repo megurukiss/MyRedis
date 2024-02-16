@@ -29,6 +29,12 @@ public class SlaveServer extends RedisServer{
                     try {
                         Socket clientSocket = serverSocket.accept();
                         new Thread(() -> {
+                            // wait for 100ms
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                             handleClient(clientSocket);
                         }).start();
                     } catch (IOException e) {
