@@ -98,6 +98,9 @@ public class SlaveServer extends RedisServer{
                     handleACK(writer);
                 }
                 break;
+            case "wait":
+                handleWait(clientSocket);
+                break;
             default:
                 writer.print("-ERR unknown command '"+command+"'\r\n");
                 writer.flush();
@@ -145,6 +148,11 @@ public class SlaveServer extends RedisServer{
         writer.print(toRESP(ackCommand));
         writer.flush();
         startACKCounting = true;
+    }
+    public void handleWait(Socket clientSocket) throws IOException{
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        writer.print(":0\r\n");
+        writer.flush();
     }
 
     public void listenToMaster() throws IOException{

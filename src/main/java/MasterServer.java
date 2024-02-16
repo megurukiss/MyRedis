@@ -151,7 +151,7 @@ public class MasterServer extends RedisServer{
     }
     private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
 //        System.out.println(replicaSockets);
-//        checkReplicaSockets();
+        checkReplicaSockets();
         for(Socket replicaSocket: replicaSockets){
             PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
             for(String command: commandArray){
