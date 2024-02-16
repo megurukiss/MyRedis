@@ -98,12 +98,6 @@ public class MasterServer extends RedisServer{
                 break;
             case "set":
                 propogateToReplicas(commandArray);
-                // wait for 30ms
-                try {
-                    Thread.sleep(30);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 if(commandLength==3) {
                     handleSet(commandArray.get(4), commandArray.get(6), writer);
                 }else if(commandLength==5){
@@ -164,6 +158,12 @@ public class MasterServer extends RedisServer{
                 writer.print(command+"\r\n");
             }
             writer.flush();
+        }
+        // wait for 30ms
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
     @Override
