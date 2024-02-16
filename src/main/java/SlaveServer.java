@@ -8,6 +8,8 @@ public class SlaveServer extends RedisServer{
     String role = "slave";
     String MasterIp;
     int MasterPort;
+    int ACK = 0;
+    Boolean startACKCounting = false;
     Socket masterSocket=null;
     public SlaveServer(){
         super();
@@ -30,6 +32,8 @@ public class SlaveServer extends RedisServer{
                         Socket clientSocket = serverSocket.accept();
                         new Thread(() -> {
                             // wait for 100ms
+                            // wait for master socket to complete task
+                            // delete in final version
                             try {
                                 Thread.sleep(100);
                             } catch (InterruptedException e) {
@@ -75,7 +79,7 @@ public class SlaveServer extends RedisServer{
                     writer.print("-ERR syntax error\r\n");
                     writer.flush();
                 }
-                System.out.println(map);
+//                System.out.println(map);
                 break;
             case "get":
                 handleGet(commandArray.get(4), writer);
@@ -127,9 +131,10 @@ public class SlaveServer extends RedisServer{
     }
 
     public void handleACK(PrintWriter writer){
-        String[] ackCommand = new String[]{"REPLCONF","ACK",String.valueOf(0)};
+        String[] ackCommand = new String[]{"REPLCONF","ACK",String.valueOf(ACK)};
         writer.print(toRESP(ackCommand));
         writer.flush();
+        startACKCounting = true;
     }
 
     public void listenToMaster() throws IOException{
@@ -261,5 +266,38 @@ public class SlaveServer extends RedisServer{
         throw new IOException("Error reading file content");
     }
 
+    public static int countCommandLength(ArrayList<String> command){
+        int count=0;
+        for(String s: command){
+            count+=s.length();
+            count+=2; // for \r\n
+        }
+        return count;
+    }
 
+    @Override
+    public void listenToSocketCommand(Socket replicaSocket) throws IOException{
+        BufferedReader reader=new BufferedReader(new InputStreamReader(replicaSocket.getInputStream()));
+        String line;
+        ArrayList<String> commandArray = new ArrayList<>();
+        int commandLength=0;
+        while ((line = reader.readLine()) != null) {
+            try{
+                commandArray.add(line);
+                if (commandArray.size() == 1) {
+                    commandLength = Integer.parseInt(commandArray.getFirst().substring(1)) * 2 + 1;
+                } else if (commandArray.size() == commandLength) {
+                    System.out.println(commandArray);
+                    if(startACKCounting){
+                        ACK+=countCommandLength(commandArray);
+                    }
+                    handleCommand(commandArray, replicaSocket);
+                    commandArray.clear();
+                }
+            }catch (Exception e){
+                commandArray.clear();
+                System.out.println("Exception: "+e.getMessage());
+            }
+        }
+    }
 }
