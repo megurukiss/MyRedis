@@ -316,7 +316,7 @@ public class RedisServer {
             throw new IOException("Empty message or connection closed");
         }
 
-//        System.out.println(sb.toString());
+        System.out.println(sb.toString());
         return sb.toString();
     }
 

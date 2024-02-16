@@ -112,8 +112,10 @@ public class SlaveServer extends RedisServer{
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         int remotePort = clientSocket.getPort();
         String remoteIp = clientSocket.getInetAddress().getHostAddress();
-        writer.print("+PONG\r\n");
-        writer.flush();
+        if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
+            writer.print("+PONG\r\n");
+            writer.flush();
+        }
     }
 
     public void handleSet(String key, String value, Socket clientSocket) throws IOException{

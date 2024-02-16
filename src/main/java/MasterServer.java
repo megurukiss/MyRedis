@@ -154,7 +154,9 @@ public class MasterServer extends RedisServer{
     }
     private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
 //        System.out.println(replicaSockets);
-        checkReplicaSockets();
+        // check if replicaSockets are still alive, if not, remove them
+        // uncomment in the final version
+//        checkReplicaSockets();
         for(Socket replicaSocket: replicaSockets){
             PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
             for(String command: commandArray){
@@ -224,7 +226,6 @@ public class MasterServer extends RedisServer{
                 writer.print("*1\r\n$4\r\nping\r\n");
                 writer.flush();
                 // receive pong
-                String pong = readMessage(replicaSocket);
             } catch (IOException e) {
                 replicaSockets.remove(replicaSocket);
             }
