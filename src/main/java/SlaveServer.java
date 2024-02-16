@@ -63,7 +63,7 @@ public class SlaveServer extends RedisServer{
         String command = commandArray.get(2);
         switch (command.toLowerCase()){
             case "ping":
-                handlePing(writer);
+                handlePing(clientSocket);
                 break;
             case "echo":
                 handleEcho(commandArray.get(4), writer);
@@ -102,6 +102,16 @@ public class SlaveServer extends RedisServer{
                 writer.print("-ERR unknown command '"+command+"'\r\n");
                 writer.flush();
                 break;
+        }
+    }
+
+    public void handlePing(Socket clientSocket) throws IOException{
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        int remotePort = clientSocket.getPort();
+        String remoteIp = clientSocket.getInetAddress().getHostAddress();
+        if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
+            writer.print("+PONG\r\n");
+            writer.flush();
         }
     }
 
