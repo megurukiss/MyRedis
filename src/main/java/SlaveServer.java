@@ -34,11 +34,11 @@ public class SlaveServer extends RedisServer{
                             // wait for 100ms
                             // wait for master socket to complete task
                             // delete in final version
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+//                            try {
+//                                Thread.sleep(100);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
                             handleClient(clientSocket);
                         }).start();
                     } catch (IOException e) {
@@ -55,7 +55,7 @@ public class SlaveServer extends RedisServer{
 
 
     @Override
-    public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
+    public synchronized void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
 //        String[] commandArray = splitCommand(command);
         int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
         OutputStream os = clientSocket.getOutputStream();

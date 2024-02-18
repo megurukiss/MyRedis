@@ -77,7 +77,7 @@ public class RedisServer {
         }
     }
 
-    public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
+    public synchronized void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
 //        String[] commandArray = splitCommand(command);
         int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
         OutputStream os = clientSocket.getOutputStream();

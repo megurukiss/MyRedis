@@ -68,7 +68,7 @@ public class MasterServer extends RedisServer{
     }
 
     @Override
-    public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
+    public synchronized void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
         int commandLength = Integer.parseInt(commandArray.getFirst().substring(1));
         OutputStream os = clientSocket.getOutputStream();
         PrintWriter writer = new PrintWriter(os, true);
