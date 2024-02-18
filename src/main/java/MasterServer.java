@@ -152,7 +152,7 @@ public class MasterServer extends RedisServer{
             e.printStackTrace();
         }
     }
-    private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
+    private synchronized void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
 //        System.out.println(replicaSockets);
         // check if replicaSockets are still alive, if not, remove them
         // uncomment in the final version
