@@ -2,10 +2,9 @@
 
 ### functionality
 
-- [x] Set and Get
+- [x] Set, Get, Handshake, Wait
 - [x] Expiry
 - [x] Master-Slave Replication
 - [x] Persistence
-- [x] Handshake
-- [x] Command Propagation
+- [x] Command Propagation (Master -> Slave)
 - [x] Multi-threading
