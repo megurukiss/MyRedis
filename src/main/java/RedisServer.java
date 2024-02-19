@@ -9,7 +9,7 @@ public class RedisServer {
     ServerSocket serverSocket = null;
     int port = 6379;
     String role = "master";
-    ConcurrentHashMap<String, String> map;
+    final ConcurrentHashMap<String, String> map;
     ConcurrentHashMap<String,Long> ExpiryMap;
     String dir;
     String dbfilename;

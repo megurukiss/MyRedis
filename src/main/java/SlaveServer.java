@@ -127,55 +127,59 @@ public class SlaveServer extends RedisServer{
         }
     }
 
-    public synchronized void handleSet(String key, String value, Socket clientSocket) throws IOException{
-        map.put(key, value);
-        int remotePort = clientSocket.getPort();
-        String remoteIp = clientSocket.getInetAddress().getHostAddress();
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-        if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
-            writer.print("+OK\r\n");
-            writer.flush();
+    public void handleSet(String key, String value, Socket clientSocket) throws IOException{
+        synchronized (map) {
+            map.put(key, value);
+            int remotePort = clientSocket.getPort();
+            String remoteIp = clientSocket.getInetAddress().getHostAddress();
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+            if (remotePort != MasterPort || !remoteIp.equals(MasterIp)) {
+                writer.print("+OK\r\n");
+                writer.flush();
+            }
         }
     }
 
-    public synchronized void handleSetWithExpiry(String key, String value, String expiry, Socket clientSocket) throws IOException{
-        long time = System.currentTimeMillis();
-        long expiryTime = Long.parseLong(expiry);
-        map.put(key, value);
-        ExpiryMap.put(key, time+expiryTime);
-        int remotePort = clientSocket.getPort();
-        String remoteIp = clientSocket.getInetAddress().getHostAddress();
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-        if(remotePort!=MasterPort || !remoteIp.equals(MasterIp)){
-            writer.print("+OK\r\n");
-            writer.flush();
+    public void handleSetWithExpiry(String key, String value, String expiry, Socket clientSocket) throws IOException{
+        synchronized (map) {
+            long time = System.currentTimeMillis();
+            long expiryTime = Long.parseLong(expiry);
+            map.put(key, value);
+            ExpiryMap.put(key, time + expiryTime);
+            int remotePort = clientSocket.getPort();
+            String remoteIp = clientSocket.getInetAddress().getHostAddress();
+            PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+            if (remotePort != MasterPort || !remoteIp.equals(MasterIp)) {
+                writer.print("+OK\r\n");
+                writer.flush();
+            }
         }
     }
 
     @Override
-    public synchronized void handleGet(String key, PrintWriter writer){
+    public void handleGet(String key, PrintWriter writer){
         /*System.out.println("Key: "+key);*/
-        String value = map.get(key);
-        Long expiryTime = ExpiryMap.get(key);
-        if(value!=null){
-            if(expiryTime!=null && System.currentTimeMillis()>expiryTime) {
-                map.remove(key);
-                ExpiryMap.remove(key);
-                System.out.println("Key expired");
+        synchronized (map) {
+            String value = map.get(key);
+            Long expiryTime = ExpiryMap.get(key);
+            if (value != null) {
+                if (expiryTime != null && System.currentTimeMillis() > expiryTime) {
+                    map.remove(key);
+                    ExpiryMap.remove(key);
+                    System.out.println("Key expired");
+                    writer.print("$-1\r\n");
+                    writer.flush();
+                    return;
+                } else {
+                    System.out.println("Key found");
+                    writer.print("$" + value.length() + "\r\n" + value + "\r\n");
+                }
+            } else {
+                System.out.println("Key not found");
                 writer.print("$-1\r\n");
-                writer.flush();
-                return;
             }
-            else {
-                System.out.println("Key found");
-                writer.print("$" + value.length() + "\r\n" + value + "\r\n");
-            }
+            writer.flush();
         }
-        else{
-            System.out.println("Key not found");
-            writer.print("$-1\r\n");
-        }
-        writer.flush();
     }
 
     public void handleACK(PrintWriter writer){
