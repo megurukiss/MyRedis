@@ -194,11 +194,6 @@ public class RedisServer {
         writer.print(bulkString("role:"+role));
         writer.flush();
     }
-    public void handleWait(Socket clientSocket) throws IOException{
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-        writer.print(":0\r\n");
-        writer.flush();
-    }
 
     public void handleConfigGet(String config, PrintWriter writer){
         if(config.equalsIgnoreCase("dir")){

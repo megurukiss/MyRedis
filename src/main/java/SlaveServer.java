@@ -9,6 +9,7 @@ public class SlaveServer extends RedisServer{
     String MasterIp;
     int MasterPort;
     int ACK = 0;
+    private String SLAVE_REPL_OFFSET = "0";
     Boolean startACKCounting = false;
     Socket masterSocket=null;
     public SlaveServer(){
@@ -48,7 +49,6 @@ public class SlaveServer extends RedisServer{
         }
     }
 
-
     @Override
     public void handleCommand(ArrayList<String> commandArray, Socket clientSocket) throws IOException{
 //        String[] commandArray = splitCommand(command);
@@ -79,6 +79,9 @@ public class SlaveServer extends RedisServer{
             case "get":
                 handleGet(commandArray.get(4), writer,3);
                 break;
+            case "psync":
+                handlePsync(writer);
+                break;
             case "info":
                 if(commandArray.get(4).equalsIgnoreCase("replication")){
                     handleInfo(writer);
@@ -92,9 +95,6 @@ public class SlaveServer extends RedisServer{
                 if(commandArray.get(4).equalsIgnoreCase("GETACK")){
                     handleACK(writer);
                 }
-                break;
-            case "wait":
-                handleWait(clientSocket);
                 break;
             case "config":
                 if(commandArray.get(4).equalsIgnoreCase("get") && commandArray.size()>6){
@@ -131,6 +131,9 @@ public class SlaveServer extends RedisServer{
             if (remotePort != MasterPort || !remoteIp.equals(MasterIp)) {
                 writer.print("+OK\r\n");
                 writer.flush();
+            }else{
+                // add offset
+                SLAVE_REPL_OFFSET = String.valueOf(Integer.parseInt(SLAVE_REPL_OFFSET) + 1);
             }
         }
     }
@@ -147,6 +150,9 @@ public class SlaveServer extends RedisServer{
             if (remotePort != MasterPort || !remoteIp.equals(MasterIp)) {
                 writer.print("+OK\r\n");
                 writer.flush();
+            }else{
+                // add offset
+                SLAVE_REPL_OFFSET = String.valueOf(Integer.parseInt(SLAVE_REPL_OFFSET) + 1);
             }
         }
     }
@@ -187,6 +193,11 @@ public class SlaveServer extends RedisServer{
             }
             writer.flush();
         }
+    }
+
+    private void handlePsync(PrintWriter writer){
+        writer.print(String.format("+FULLRESYNC %s\r\n", SLAVE_REPL_OFFSET));
+        writer.flush();
     }
 
     public void handleACK(PrintWriter writer){

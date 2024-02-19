@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MasterServer extends RedisServer{
     String role = "master";
     private static final String MASTER_REPLID = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
-    private static final String MASTER_REPL_OFFSET = "0";
+    private String MASTER_REPL_OFFSET = "0";
     private final LinkedList<Socket> replicaSockets;
     public MasterServer(){
         super();
@@ -122,7 +122,7 @@ public class MasterServer extends RedisServer{
                 }
                 break;
             case "wait":
-                handleWait(clientSocket);
+                handleWait(commandArray.get(4),commandArray.get(6),clientSocket);
                 break;
             case "config":
                 if(commandArray.get(4).equalsIgnoreCase("get") && commandArray.size()>6){
@@ -165,7 +165,7 @@ public class MasterServer extends RedisServer{
 //        System.out.println(replicaSockets);
         // check if replicaSockets are still alive, if not, remove them
         // uncomment in the final version
-//        checkReplicaSockets();
+       checkReplicaSockets();
         for(Socket replicaSocket: replicaSockets){
             PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
             for(String command: commandArray){
@@ -173,6 +173,8 @@ public class MasterServer extends RedisServer{
             }
             writer.flush();
         }
+        // add offset to the master
+        MASTER_REPL_OFFSET=String.valueOf(Integer.parseInt(MASTER_REPL_OFFSET)+1);
     }
     @Override
     public void handleInfo(PrintWriter writer){
@@ -183,6 +185,37 @@ public class MasterServer extends RedisServer{
         response.append(String.format("master_repl_offset:%s\r\n", MASTER_REPL_OFFSET));
         String info=bulkString(response.toString());
         writer.print(info);
+        writer.flush();
+    }
+
+    public void handleWait(String num,String timeLimit, Socket clientSocket) throws IOException{
+        int numClients=Integer.parseInt(num);
+        int time=Integer.parseInt(timeLimit);
+        int count=0;
+        // set a start time
+        long startTime=System.currentTimeMillis();
+        // iterate through the replicaSockets
+        for(Socket replicaSocket: replicaSockets){
+            // check if the time has passed
+            if(System.currentTimeMillis()-startTime>time && numClients<0){
+                break;
+            }
+            // send psync command to the client
+            PrintWriter writer = new PrintWriter(replicaSocket.getOutputStream(), true);
+            writer.print("*1\r\n$4\r\npsync\r\n");
+            writer.flush();
+            // wait for the response
+            String response=readMessage(replicaSocket);
+            // split response by ' '
+            int slaveOffset=Integer.parseInt(response.split(" ")[1]);
+            // check if the offset equals the master offset
+            if(slaveOffset==Integer.parseInt(MASTER_REPL_OFFSET)){
+                numClients--;
+            }
+            count++;
+        }
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+        writer.print(String.format(":%s\r\n",count));
         writer.flush();
     }
 
@@ -235,6 +268,7 @@ public class MasterServer extends RedisServer{
                 writer.print("*1\r\n$4\r\nping\r\n");
                 writer.flush();
                 // receive pong
+
             } catch (IOException e) {
                 replicaSockets.remove(replicaSocket);
             }
