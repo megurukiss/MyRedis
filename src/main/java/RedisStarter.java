@@ -69,6 +69,7 @@ public class RedisStarter {
                 .numberOfArgs(1)
                 .desc("Set the directory for the rdb files")
                 .build();
+        options.addOption(option);
 
         // add dbfilename
         option = Option.builder("db")
@@ -76,7 +77,7 @@ public class RedisStarter {
                 .numberOfArgs(1)
                 .desc("Set the name of the rdb file")
                 .build();
-
+        options.addOption(option);
 
         parseAndStart(options,args);
     }
