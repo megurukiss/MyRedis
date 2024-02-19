@@ -124,6 +124,15 @@ public class MasterServer extends RedisServer{
             case "wait":
                 handleWait(clientSocket);
                 break;
+            case "config":
+                if(commandArray.get(4).equalsIgnoreCase("get") && commandArray.size()>6){
+                    handleConfigGet(commandArray.get(6), writer);
+                }
+                else{
+                    writer.print("-ERR unknown subcommand or wrong number of arguments for 'config'\r\n");
+                    writer.flush();
+                }
+                break;
             default:
                 writer.print("-ERR unknown command '"+command+"'\r\n");
                 writer.flush();
@@ -152,7 +161,7 @@ public class MasterServer extends RedisServer{
             e.printStackTrace();
         }
     }
-    private synchronized void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
+    private void propogateToReplicas(ArrayList<String> commandArray) throws IOException{
 //        System.out.println(replicaSockets);
         // check if replicaSockets are still alive, if not, remove them
         // uncomment in the final version

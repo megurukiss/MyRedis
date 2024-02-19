@@ -34,11 +34,11 @@ public class SlaveServer extends RedisServer{
                             // wait for 100ms
                             // wait for master socket to complete task
                             // delete in final version
-//                            try {
-//                                Thread.sleep(100);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                             handleClient(clientSocket);
                         }).start();
                     } catch (IOException e) {
@@ -100,6 +100,15 @@ public class SlaveServer extends RedisServer{
                 break;
             case "wait":
                 handleWait(clientSocket);
+                break;
+            case "config":
+                if(commandArray.get(4).equalsIgnoreCase("get") && commandArray.size()>6){
+                    handleConfigGet(commandArray.get(6), writer);
+                }
+                else{
+                    writer.print("-ERR unknown subcommand or wrong number of arguments for 'config'\r\n");
+                    writer.flush();
+                }
                 break;
             default:
                 writer.print("-ERR unknown command '"+command+"'\r\n");

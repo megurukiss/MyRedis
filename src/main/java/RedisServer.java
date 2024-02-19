@@ -11,10 +11,20 @@ public class RedisServer {
     String role = "master";
     ConcurrentHashMap<String, String> map;
     ConcurrentHashMap<String,Long> ExpiryMap;
+    String dir;
+    String dbfilename;
 
     public RedisServer() {
         map= new ConcurrentHashMap<>();
         ExpiryMap = new ConcurrentHashMap<>();
+    }
+
+    public void setDir(String dir) {
+        this.dir = dir;
+    }
+
+    public void setDbfilename(String dbfilename) {
+        this.dbfilename = dbfilename;
     }
 
     public void setPort(int port) {
@@ -114,6 +124,15 @@ public class RedisServer {
                     writer.flush();
                 }
                 break;
+            case "config":
+                if(commandArray.get(4).equalsIgnoreCase("get") && commandArray.size()>6){
+                    handleConfigGet(commandArray.get(6), writer);
+                }
+                else{
+                    writer.print("-ERR unknown subcommand or wrong number of arguments for 'config'\r\n");
+                    writer.flush();
+                }
+                break;
             default:
                 writer.print("-ERR unknown command '"+command+"'\r\n");
                 writer.flush();
@@ -179,6 +198,21 @@ public class RedisServer {
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
         writer.print(":0\r\n");
         writer.flush();
+    }
+
+    public void handleConfigGet(String config, PrintWriter writer){
+        if(config.equalsIgnoreCase("dir")){
+            writer.print("$"+dir.length()+"\r\n"+dir+"\r\n");
+            writer.flush();
+        }
+        else if(config.equalsIgnoreCase("dbfilename")){
+            writer.print("$"+dbfilename.length()+"\r\n"+dbfilename+"\r\n");
+            writer.flush();
+        }
+        else{
+            writer.print("-ERR unknown subcommand or wrong number of arguments for 'config'\r\n");
+            writer.flush();
+        }
     }
 
     public static String bulkString(String message){

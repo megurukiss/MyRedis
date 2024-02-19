@@ -26,6 +26,12 @@ public class RedisStarter {
             if(cmd.hasOption("port")){
                 server.setPort(Integer.parseInt(cmd.getOptionValue("port")));
             }
+            if(cmd.hasOption("dir")){
+                server.setDir(cmd.getOptionValue("dir"));
+            }
+            if(cmd.hasOption("dbfilename")){
+                server.setDbfilename(cmd.getOptionValue("dbfilename"));
+            }
         } catch (ParseException e) {
             System.err.println("Error: " + e.getMessage());
             // Optionally, print usage information
@@ -56,6 +62,21 @@ public class RedisStarter {
                 .desc("Set the server as a slave of the server at the given IP and port")
                 .build();
         options.addOption(option);
+
+        // add dir
+        option = Option.builder("d")
+                .longOpt("dir")
+                .numberOfArgs(1)
+                .desc("Set the directory for the rdb files")
+                .build();
+
+        // add dbfilename
+        option = Option.builder("db")
+                .longOpt("dbfilename")
+                .numberOfArgs(1)
+                .desc("Set the name of the rdb file")
+                .build();
+
 
         parseAndStart(options,args);
     }
