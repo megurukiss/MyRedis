@@ -34,11 +34,6 @@ public class SlaveServer extends RedisServer{
                             // wait for 100ms
                             // wait for master socket to complete task
                             // delete in final version
-//                            try {
-//                                Thread.sleep(100);
-//                            } catch (InterruptedException e) {
-//                                e.printStackTrace();
-//                            }
                             handleClient(clientSocket);
                         }).start();
                     } catch (IOException e) {
@@ -82,7 +77,7 @@ public class SlaveServer extends RedisServer{
 //                System.out.println(map);
                 break;
             case "get":
-                handleGet(commandArray.get(4), writer);
+                handleGet(commandArray.get(4), writer,3);
                 break;
             case "info":
                 if(commandArray.get(4).equalsIgnoreCase("replication")){
@@ -156,8 +151,7 @@ public class SlaveServer extends RedisServer{
         }
     }
 
-    @Override
-    public void handleGet(String key, PrintWriter writer){
+    public void handleGet(String key, PrintWriter writer,int countDownLatch) {
         /*System.out.println("Key: "+key);*/
         synchronized (map) {
             String value = map.get(key);
@@ -170,13 +164,26 @@ public class SlaveServer extends RedisServer{
                     writer.print("$-1\r\n");
                     writer.flush();
                     return;
-                } else {
+                }
+                else {
                     System.out.println("Key found");
                     writer.print("$" + value.length() + "\r\n" + value + "\r\n");
                 }
-            } else {
-                System.out.println("Key not found");
-                writer.print("$-1\r\n");
+            }
+            else {
+                try {
+                    Thread.sleep(100);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(countDownLatch>0){
+                    handleGet(key,writer,countDownLatch-1);
+                }
+                else {
+                    System.out.println("Key not found");
+                    writer.print("$-1\r\n");
+                }
             }
             writer.flush();
         }
