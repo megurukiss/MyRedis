@@ -34,11 +34,11 @@ public class SlaveServer extends RedisServer{
                             // wait for 100ms
                             // wait for master socket to complete task
                             // delete in final version
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+//                            try {
+//                                Thread.sleep(100);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
                             handleClient(clientSocket);
                         }).start();
                     } catch (IOException e) {
