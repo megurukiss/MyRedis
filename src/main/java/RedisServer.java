@@ -202,11 +202,14 @@ public class RedisServer {
 
     public void handleConfigGet(String config, PrintWriter writer){
         if(config.equalsIgnoreCase("dir")){
-            writer.print("$"+dir.length()+"\r\n"+dir+"\r\n");
+            // create arraylist with contents {"dir",this.dir}
+            String[] commandArray = {"dir",this.dir};
+            writer.print(toRESP(commandArray));
             writer.flush();
         }
         else if(config.equalsIgnoreCase("dbfilename")){
-            writer.print("$"+dbfilename.length()+"\r\n"+dbfilename+"\r\n");
+            String[] commandArray = {"dbfilename",this.dbfilename};
+            writer.print(toRESP(commandArray));
             writer.flush();
         }
         else{
